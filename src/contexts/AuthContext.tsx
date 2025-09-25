@@ -94,14 +94,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         return {
           success: false,
-          message: response.error?.message || 'Login failed'
+          message: response.error?.message || 'Login failed. Please check your credentials.'
         };
       }
     } catch (error) {
       console.error('Login error:', error);
       return {
         success: false,
-        message: 'Network error. Please try again.'
+        message: 'Unable to connect to server. Please check your internet connection and try again.'
       };
     } finally {
       setIsLoading(false);
@@ -123,14 +123,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else {
         return {
           success: false,
-          message: response.error?.message || 'Registration failed'
+          message: response.error?.message || 'Registration failed. Please try again.'
         };
       }
     } catch (error) {
       console.error('Registration error:', error);
       return {
         success: false,
-        message: 'Network error. Please try again.'
+        message: 'Unable to connect to server. Please check your internet connection and try again.'
       };
     } finally {
       setIsLoading(false);

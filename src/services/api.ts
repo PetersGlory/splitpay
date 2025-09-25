@@ -1,9 +1,6 @@
 // API Configuration and Service Layer for SpleetPay
 const API_BASE_URL ='https://spleetpay-backend.onrender.com/api';
 
-// Mock data for development/demo when API is not available
-const MOCK_MODE = true; // Set to false when real API is available
-
 // Types
 export interface User {
   id: string;
@@ -131,85 +128,16 @@ class TokenManager {
     const token = this.getToken();
     if (!token) return false;
     
-    // In mock mode, mock tokens are always valid
-    if (MOCK_MODE && token.startsWith('mock_token_')) {
-      return true;
-    }
-    
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.exp * 1000 > Date.now();
     } catch {
-      // If token parsing fails but we have a token, assume it's valid in demo mode
-      return MOCK_MODE;
+      // If token parsing fails, consider it invalid
+      return false;
     }
   }
 }
 
-// Mock Data Generator
-class MockDataGenerator {
-  static generateUserId() {
-    return `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  static generatePaymentId() {
-    return `payment_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  static generateToken() {
-    return `mock_token_${Date.now()}_${Math.random().toString(36).substr(2, 16)}`;
-  }
-
-  static createMockUser(userData: any): User {
-    return {
-      id: this.generateUserId(),
-      email: userData.email,
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      phone: userData.phone || '',
-      preferredCurrency: userData.preferredCurrency || 'NGN',
-      isVerified: true,
-      accountStatus: 'active',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      wallet: {
-        id: `wallet_${Date.now()}`,
-        balance: 25000.00,
-        currency: userData.preferredCurrency || 'NGN',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-    };
-  }
-
-  static createMockPaymentRequest(data: any): PaymentRequest {
-    const id = this.generatePaymentId();
-    return {
-      id,
-      userId: this.generateUserId(),
-      type: data.type,
-      description: data.description,
-      amount: data.amount || data.totalAmount,
-      currency: data.currency,
-      status: 'pending',
-      paymentLink: `https://pay.spleetpay.com/p/${id.substr(-8)}`,
-      qrCodeUrl: `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://pay.spleetpay.com/p/${id.substr(-8)}`,
-      allowTips: data.allowTips || false,
-      expiresAt: new Date(Date.now() + (data.expiresInHours || 24) * 60 * 60 * 1000).toISOString(),
-      totalCollected: 0,
-      createdAt: new Date().toISOString(),
-      participants: data.participants?.map((p: any, index: number) => ({
-        id: `participant_${Date.now()}_${index}`,
-        name: p.name,
-        email: p.email,
-        phone: p.phone,
-        amount: p.amount,
-        hasPaid: false,
-        participantLink: `https://pay.spleetpay.com/split/${id.substr(-8)}_${index}`
-      }))
-    };
-  }
-}
 
 // HTTP Client
 class ApiClient {
@@ -217,11 +145,6 @@ class ApiClient {
     endpoint: string, 
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
-    // If in mock mode or API is unavailable, return mock data
-    if (MOCK_MODE) {
-      return this.getMockResponse<T>(endpoint, options);
-    }
-
     const url = `${API_BASE_URL}${endpoint}`;
     const token = TokenManager.getToken();
     
@@ -261,155 +184,19 @@ class ApiClient {
 
       return data;
     } catch (error) {
-      console.error('API request failed, falling back to mock data:', error);
-      // Fallback to mock data when API is unavailable
-      return this.getMockResponse<T>(endpoint, options);
+      console.error('API request failed:', error);
+      return {
+        success: false,
+        error: {
+          code: 'NETWORK_ERROR',
+          message: 'Network error. Please check your connection and try again.'
+        }
+      } as ApiResponse<T>;
     }
   }
 
-  private getMockResponse<T>(endpoint: string, options: RequestInit): Promise<ApiResponse<T>> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        let mockData: any = null;
-        let success = true;
-        let message = '';
-
-        try {
-          const body = options.body ? JSON.parse(options.body as string) : {};
-          
-          if (endpoint === '/auth/register') {
-            const user = MockDataGenerator.createMockUser(body);
-            mockData = {
-              user,
-              token: MockDataGenerator.generateToken(),
-              refreshToken: MockDataGenerator.generateToken()
-            };
-            message = 'Registration successful! (Demo Mode)';
-          } else if (endpoint === '/auth/login') {
-            const user = MockDataGenerator.createMockUser({
-              email: body.email,
-              firstName: 'Demo',
-              lastName: 'User',
-              preferredCurrency: 'NGN'
-            });
-            mockData = {
-              user,
-              token: MockDataGenerator.generateToken(),
-              refreshToken: MockDataGenerator.generateToken()
-            };
-            message = 'Login successful! (Demo Mode)';
-          } else if (endpoint === '/auth/verify-email') {
-            mockData = null;
-            message = 'Email verified successfully! (Demo Mode)';
-          } else if (endpoint === '/users/profile') {
-            mockData = MockDataGenerator.createMockUser({
-              email: 'demo@spleetpay.com',
-              firstName: 'Demo',
-              lastName: 'User',
-              preferredCurrency: 'NGN'
-            });
-          } else if (endpoint === '/users/payments/create') {
-            mockData = MockDataGenerator.createMockPaymentRequest(body);
-            message = 'Payment request created successfully! (Demo Mode)';
-          } else if (endpoint === '/users/payments/split/create') {
-            mockData = MockDataGenerator.createMockPaymentRequest(body);
-            message = 'Group split created successfully! (Demo Mode)';
-          } else if (endpoint.startsWith('/users/payments/history')) {
-            mockData = {
-              payments: [
-                {
-                  id: 'payment_1',
-                  type: 'pay_for_me',
-                  description: 'Lunch at Pizza Palace',
-                  amount: 2500,
-                  status: 'completed',
-                  createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-                },
-                {
-                  id: 'payment_2',
-                  type: 'group_split',
-                  description: 'Weekend Trip',
-                  amount: 15000,
-                  status: 'pending',
-                  createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-                  participants: [
-                    { name: 'Alice', amount: 5000, hasPaid: true },
-                    { name: 'Bob', amount: 5000, hasPaid: false },
-                    { name: 'Charlie', amount: 5000, hasPaid: false }
-                  ]
-                }
-              ],
-              pagination: {
-                total: 2,
-                page: 1,
-                limit: 20,
-                totalPages: 1
-              }
-            };
-          } else if (endpoint === '/users/wallet') {
-            mockData = {
-              balance: 25000.00,
-              currency: 'NGN',
-              lastUpdated: new Date().toISOString()
-            };
-          } else if (endpoint.startsWith('/users/wallet/transactions')) {
-            mockData = {
-              transactions: [
-                {
-                  id: 'txn_1',
-                  type: 'credit',
-                  amount: 2500,
-                  currency: 'NGN',
-                  description: 'Payment received for Lunch',
-                  balanceAfter: 25000,
-                  reference: 'CREDIT_123',
-                  createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString()
-                }
-              ],
-              pagination: {
-                total: 1,
-                page: 1,
-                limit: 20,
-                totalPages: 1
-              }
-            };
-          } else {
-            success = false;
-            mockData = null;
-          }
-
-          resolve({
-            success,
-            data: mockData,
-            message: message || undefined,
-            error: success ? undefined : {
-              code: 'MOCK_ERROR',
-              message: 'Mock endpoint not implemented'
-            }
-          } as ApiResponse<T>);
-        } catch (error) {
-          resolve({
-            success: false,
-            error: {
-              code: 'MOCK_ERROR',
-              message: 'Mock data generation failed'
-            }
-          } as ApiResponse<T>);
-        }
-      }, 500); // Simulate network delay
-    });
-  }
 
   private async refreshToken(): Promise<boolean> {
-    if (MOCK_MODE) {
-      // In mock mode, always succeed with new tokens
-      TokenManager.setTokens(
-        MockDataGenerator.generateToken(),
-        MockDataGenerator.generateToken()
-      );
-      return true;
-    }
-
     const refreshToken = TokenManager.getRefreshToken();
     if (!refreshToken) return false;
 
@@ -422,17 +209,13 @@ class ApiClient {
 
       if (response.ok) {
         const data = await response.json();
-        TokenManager.setTokens(data.data.token, data.data.refreshToken);
-        return true;
+        if (data.success && data.data) {
+          TokenManager.setTokens(data.data.token, data.data.refreshToken);
+          return true;
+        }
       }
     } catch (error) {
-      console.error('Token refresh failed, using mock tokens:', error);
-      // Fallback to mock tokens
-      TokenManager.setTokens(
-        MockDataGenerator.generateToken(),
-        MockDataGenerator.generateToken()
-      );
-      return true;
+      console.error('Token refresh failed:', error);
     }
 
     return false;

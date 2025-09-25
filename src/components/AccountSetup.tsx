@@ -5,7 +5,9 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Badge } from './ui/badge';
-import { ArrowLeft, User, Mail, Phone, Wallet, Check, Shield, Clock, TrendingUp } from 'lucide-react';
+import { ArrowLeft, User, Mail, Phone, Wallet, Check, Shield, Clock, TrendingUp, Loader2, AlertCircle } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { UserAPI } from '../services/api';
 
 interface AccountSetupProps {
   onNavigate: (screen: string) => void;
@@ -13,41 +15,50 @@ interface AccountSetupProps {
 }
 
 export function AccountSetup({ onNavigate, onAccountCreated }: AccountSetupProps) {
+  const { updateProfile, user } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
     agreeToTerms: false
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.firstName || !formData.lastName || !formData.email || !formData.agreeToTerms) {
+      setError('Please fill in all required fields');
       return;
     }
 
     setIsLoading(true);
+    setError('');
+    setSuccess('');
     
-    // Simulate account creation
-    setTimeout(() => {
-      const accountData = {
-        id: Date.now().toString(),
+    try {
+      const response = await updateProfile({
         firstName: formData.firstName,
         lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        createdAt: new Date().toISOString(),
-        walletBalance: 0,
-        virtualAccountNumber: `2${Math.random().toString().slice(2, 12)}`,
-        accountType: 'premium'
-      };
-      
-      onAccountCreated(accountData);
+        phone: formData.phone || undefined
+      });
+
+      if (response.success) {
+        setSuccess('Account updated successfully!');
+        setTimeout(() => {
+          onNavigate('wallet-dashboard');
+        }, 1500);
+      } else {
+        setError(response.message || 'Failed to update account');
+      }
+    } catch (error) {
+      console.error('Account update error:', error);
+      setError('Failed to update account. Please try again.');
+    } finally {
       setIsLoading(false);
-      onNavigate('wallet-dashboard');
-    }, 2000);
+    }
   };
 
   const benefits = [
@@ -195,6 +206,20 @@ export function AccountSetup({ onNavigate, onAccountCreated }: AccountSetupProps
             </Label>
           </div>
 
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="w-4 h-4 text-red-500" />
+              <p className="text-red-700 text-sm">{error}</p>
+            </div>
+          )}
+
+          {success && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <Check className="w-4 h-4 text-green-500" />
+              <p className="text-green-700 text-sm">{success}</p>
+            </div>
+          )}
+
           <Button
             type="submit"
             className="w-full h-12"
@@ -202,13 +227,13 @@ export function AccountSetup({ onNavigate, onAccountCreated }: AccountSetupProps
           >
             {isLoading ? (
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Creating Account...
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Updating Account...
               </div>
             ) : (
               <>
                 <Check className="w-4 h-4 mr-2" />
-                Create Account
+                Update Account
               </>
             )}
           </Button>
