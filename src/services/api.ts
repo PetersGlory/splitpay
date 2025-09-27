@@ -513,5 +513,87 @@ export const TransactionAPI = {
   },
 };
 
+// Invoice API
+export const InvoiceAPI = {
+  async createInvoice(data: {
+    clientName: string;
+    clientEmail: string;
+    description: string;
+    amount: number;
+    dueDate: string;
+  }): Promise<ApiResponse<{
+    id: string;
+    clientName: string;
+    clientEmail: string;
+    description: string;
+    amount: number;
+    status: string;
+    dueDate: string;
+    createdDate: string;
+    paymentLink: string;
+  }>> {
+    return apiClient.post('/users/invoices', data);
+  },
+
+  async getInvoices(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<ApiResponse<{
+    invoices: Array<{
+      id: string;
+      clientName: string;
+      clientEmail: string;
+      description: string;
+      amount: number;
+      status: string;
+      dueDate: string;
+      createdDate: string;
+      paymentLink: string;
+    }>;
+    pagination: {
+      total: number;
+      page: number;
+      limit: number;
+      totalPages: number;
+    };
+  }>> {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+    const query = queryParams.toString();
+    return apiClient.get(`/users/invoices${query ? `?${query}` : ''}`);
+  },
+
+  async getInvoice(invoiceId: string): Promise<ApiResponse<{
+    id: string;
+    clientName: string;
+    clientEmail: string;
+    description: string;
+    amount: number;
+    status: string;
+    dueDate: string;
+    createdDate: string;
+    paymentLink: string;
+  }>> {
+    return apiClient.get(`/users/invoices/${invoiceId}`);
+  },
+
+  async updateInvoiceStatus(invoiceId: string, status: string): Promise<ApiResponse<null>> {
+    return apiClient.put(`/users/invoices/${invoiceId}/status`, { status });
+  },
+
+  async deleteInvoice(invoiceId: string): Promise<ApiResponse<null>> {
+    return apiClient.delete(`/users/invoices/${invoiceId}`);
+  },
+};
+
 // Export token manager for use in components
 export { TokenManager };

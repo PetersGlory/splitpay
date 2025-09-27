@@ -49,14 +49,16 @@ function AppContent() {
   }
 
   // Show auth screen if not authenticated
-  if (!isAuthenticated || !user) {
-    return <AuthScreen onAuthSuccess={() => setCurrentScreen('home')} />;
-  }
+  // if (!isAuthenticated || !user) {
+  //   return <AuthScreen onAuthSuccess={() => setCurrentScreen('home')} />;
+  // }
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
         return <Home onNavigate={setCurrentScreen} />;
+      case 'auth':
+        return <AuthScreen onAuthSuccess={()=>setCurrentScreen("home")} />;
       case 'pay-for-me':
         return <PayForMe onNavigate={setCurrentScreen} onPaymentData={setPaymentData} />;
       case 'group-split':
@@ -94,7 +96,7 @@ function AppContent() {
           />
           
           {/* Demo Mode Indicator */}
-          <DemoModeIndicator />
+          {/* <DemoModeIndicator /> */}
           
           {/* Desktop Layout */}
           <div className="hidden lg:flex lg:flex-1">
@@ -127,7 +129,7 @@ function AppContent() {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <AuthProvider children={undefined}>
       <AppContent />
     </AuthProvider>
   );

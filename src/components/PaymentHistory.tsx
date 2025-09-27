@@ -83,12 +83,13 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'Completed':
+      case 'completed':
         return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case 'Payment Link Sent':
-      case 'Collecting Payments':
+      case 'pending':
+      case 'partial':
         return <Clock className="w-4 h-4 text-blue-600" />;
-      case 'Failed':
+      case 'failed':
+      case 'cancelled':
         return <XCircle className="w-4 h-4 text-red-600" />;
       default:
         return <Clock className="w-4 h-4 text-yellow-600" />;
@@ -133,7 +134,7 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
     setRefreshing(false);
   };
 
-  const ActivePaymentCard = ({ payment }: { payment: PaymentRequest }) => (
+  const ActivePaymentCard = ({ payment, ...props }: { payment: PaymentRequest; [key: string]: any }) => (
     <Card className="p-4 border-l-4 border-l-blue-500">
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
@@ -142,9 +143,8 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
             {getStatusIcon(payment.status)}
           </div>
           <p className="text-sm text-muted-foreground">
-            {payment.type}
-            {payment.type === 'Group Split' && ` • ${payment.participants} participants`}
-            {payment.type === 'Pay for Me' && ` • ${payment.recipient}`}
+            {payment.type === 'group_split' ? 'Group Split' : 'Pay for Me'}
+            {payment.type === 'group_split' && payment.participants && ` • ${payment.participants.length} participants`}
           </p>
         </div>
         <Badge className={getStatusColor(payment.status)}>
@@ -156,25 +156,25 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
       <div className="mb-3">
         <div className="flex justify-between text-sm mb-1">
           <span className="text-muted-foreground">Progress</span>
-          <span className="font-medium">{payment.progress}%</span>
+          <span className="font-medium">{getProgress(payment)}%</span>
         </div>
-        <Progress value={payment.progress} className="h-2" />
+        <Progress value={getProgress(payment)} className="h-2" />
       </div>
 
       {/* Payment details for group split */}
-      {payment.type === 'Group Split' && payment.paymentDetails && (
+      {payment.type === 'group_split' && payment.participants && (
         <div className="mb-3 space-y-2">
           <h5 className="text-sm font-medium">Payment Status</h5>
-          {payment.paymentDetails.map((participant: any, index: number) => (
+          {payment.participants.map((participant: any, index: number) => (
             <div key={index} className="flex justify-between items-center text-sm">
               <span>{participant.name}</span>
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">{currencySymbol}{participant.amount}</span>
+                <span className="text-muted-foreground">{currencySymbol}{formatAmount(participant.amount)}</span>
                 <Badge 
-                  variant={participant.status === 'Paid' ? 'default' : 'secondary'}
+                  variant={participant.hasPaid ? 'default' : 'secondary'}
                   className="text-xs"
                 >
-                  {participant.status}
+                  {participant.hasPaid ? 'Paid' : 'Pending'}
                 </Badge>
               </div>
             </div>
@@ -182,26 +182,15 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
         </div>
       )}
 
-      {/* Last activity */}
-      {payment.lastActivity && (
-        <div className="text-xs text-muted-foreground mb-3">
-          {payment.lastActivity}
-        </div>
-      )}
 
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
-          {payment.date}
+          {formatDate(payment.createdAt)}
         </div>
         <div className="text-right">
           <div className="font-medium">
-            {currencySymbol}{payment.amount}
+            {currencySymbol}{formatAmount(payment.amount)}
           </div>
-          {payment.tip && payment.tip !== '0' && (
-            <div className="text-xs text-muted-foreground">
-              + {currencySymbol}{payment.tip} tip
-            </div>
-          )}
         </div>
       </div>
 
@@ -211,7 +200,7 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
           <Eye className="w-3 h-3" />
           View Details
         </Button>
-        {payment.type === 'Pay for Me' && (
+        {payment.type === 'pay_for_me' && (
           <Button variant="outline" size="sm" className="flex items-center gap-1">
             <Share2 className="w-3 h-3" />
             Share Again
@@ -221,7 +210,7 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
     </Card>
   );
 
-  const PaymentCard = ({ payment, showDetails = false }: { payment: any; showDetails?: boolean }) => (
+  const PaymentCard = ({ payment, showDetails = false, ...props }: { payment: any; showDetails?: boolean; [key: string]: any }) => (
     <Card className="p-4">
       <div className="flex justify-between items-start mb-3">
         <div className="flex-1">
@@ -230,9 +219,8 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
             {getStatusIcon(payment.status)}
           </div>
           <p className="text-sm text-muted-foreground">
-            {payment.type}
-            {payment.type === 'Group Split' && ` • ${payment.participants} participants`}
-            {payment.type === 'Pay for Me' && ` • ${payment.recipient}`}
+            {payment.type === 'group_split' ? 'Group Split' : 'Pay for Me'}
+            {payment.type === 'group_split' && payment.participants && ` • ${payment.participants.length} participants`}
           </p>
         </div>
         <Badge className={getStatusColor(payment.status)}>
@@ -250,17 +238,12 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
 
       <div className="flex justify-between items-center">
         <div className="text-sm text-muted-foreground">
-          {payment.date}
+          {formatDate(payment.createdAt)}
         </div>
         <div className="text-right">
           <div className="font-medium">
-            {currencySymbol}{payment.amount}
+            {currencySymbol}{formatAmount(payment.amount)}
           </div>
-          {payment.tip && payment.tip !== '0' && (
-            <div className="text-xs text-muted-foreground">
-              + {currencySymbol}{payment.tip} tip
-            </div>
-          )}
         </div>
       </div>
     </Card>
@@ -322,7 +305,7 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {completedPayments.length > 0 ? (
               completedPayments.map((payment) => (
-                <PaymentCard key={payment.id} payment={payment} showDetails />
+                <PaymentCard key={payment.id} payment={payment} showDetails={true} />
               ))
             ) : (
               <div className="lg:col-span-2 text-center py-12 text-muted-foreground">
@@ -338,7 +321,7 @@ export function PaymentHistory({ onNavigate }: PaymentHistoryProps) {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {failedPayments.length > 0 ? (
               failedPayments.map((payment) => (
-                <PaymentCard key={payment.id} payment={payment} showDetails />
+                <PaymentCard key={payment.id} payment={payment} showDetails={true} />
               ))
             ) : (
               <div className="lg:col-span-2 text-center py-12 text-muted-foreground">

@@ -10,6 +10,7 @@ import { ArrowLeft, DollarSign, FileText, User, Loader2, AlertCircle, CheckCircl
 import { useCurrency } from '../App';
 import { useAuth } from '../contexts/AuthContext';
 import { PaymentAPI } from '../services/api';
+import { AuthScreen } from './AuthScreen';
 
 interface PayForMeProps {
   onNavigate: (screen: string) => void;
@@ -18,7 +19,7 @@ interface PayForMeProps {
 
 export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
   const { currencySymbol, currency } = useCurrency();
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   
   const [formData, setFormData] = useState({
     amount: '',
@@ -41,7 +42,11 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
     { id: 'entertainment', label: 'Entertainment', icon: '🎬' },
     { id: 'general', label: 'General', icon: '💳' },
   ];
-
+// Show auth screen if not authenticated
+  if (!isAuthenticated || !user) {
+    onNavigate('auth');
+  }
+  
   const validateForm = () => {
     if (!formData.amount) return 'Amount is required';
     if (parseFloat(formData.amount) <= 0) return 'Amount must be greater than 0';

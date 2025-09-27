@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ArrowLeft, Share2, Copy, MessageSquare, Mail, Check, Users, Phone, Send, Eye, CreditCard, Building2, Smartphone, CheckCircle, Wallet, Shield, TrendingUp, Clock, DollarSign, Loader2 } from 'lucide-react';
 import { useCurrency } from '../App';
 import { PaymentAPI, PaymentRequest, Participant } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { AuthScreen } from './AuthScreen';
 
 interface SplitPaymentProps {
   paymentData: any;
@@ -22,11 +24,11 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
   const [currentPaymentData, setCurrentPaymentData] = useState(paymentData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const {isAuthenticated, user} = useAuth();
 
   if (!paymentData) {
     return null;
   }
-
   // Fetch real-time payment data
   useEffect(() => {
     const fetchPaymentData = async () => {
@@ -68,6 +70,7 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
     if (method?.includes('Mobile')) return <Smartphone className="w-4 h-4" />;
     return <CreditCard className="w-4 h-4" />;
   };
+  
 
   const PaymentDetailsDialog = ({ participant }: { participant: any }) => (
     <Dialog>
@@ -271,6 +274,10 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
     }
   };
 
+  // Show auth screen if not authenticated
+  if (!isAuthenticated || !user) {
+    return <AuthScreen onAuthSuccess={()=>onNavigate('split-payment')} />
+  }
   return (
     <div className="space-y-6">
       {/* Header */}
