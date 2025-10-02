@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { useCurrency } from '../App';
 import { WalletAPI, WalletTransaction } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import { AuthScreen } from './AuthScreen';
 
 interface WalletDashboardProps {
   onNavigate: (screen: string) => void;
@@ -33,6 +35,7 @@ interface WalletDashboardProps {
 
 export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProps) {
   const { currencySymbol } = useCurrency();
+  const { isAuthenticated, user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [fundingAmount, setFundingAmount] = useState('');
   const [loading, setLoading] = useState(true);
@@ -50,6 +53,11 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
       loadWalletData();
     }
   }, [accountData]);
+
+  // Show auth screen if not authenticated - wallet requires authentication
+  if (!isAuthenticated || !user) {
+    return <AuthScreen onAuthSuccess={() => onNavigate('wallet-dashboard')} />;
+  }
 
   const loadWalletData = async () => {
     setLoading(true);

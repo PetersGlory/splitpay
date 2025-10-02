@@ -42,10 +42,8 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
     { id: 'entertainment', label: 'Entertainment', icon: '🎬' },
     { id: 'general', label: 'General', icon: '💳' },
   ];
-// Show auth screen if not authenticated
-  if (!isAuthenticated || !user) {
-    onNavigate('auth');
-  }
+  // Note: Authentication is no longer required for creating payment requests
+  // Users can create payment links without logging in
   
   const validateForm = () => {
     if (!formData.amount) return 'Amount is required';

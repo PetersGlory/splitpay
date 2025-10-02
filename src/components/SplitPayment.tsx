@@ -274,10 +274,8 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
     }
   };
 
-  // Show auth screen if not authenticated
-  if (!isAuthenticated || !user) {
-    return <AuthScreen onAuthSuccess={()=>onNavigate('split-payment')} />
-  }
+  // Note: Authentication is no longer required for viewing split payments
+  // Users can view and participate in split payments without logging in
   return (
     <div className="space-y-6">
       {/* Header */}

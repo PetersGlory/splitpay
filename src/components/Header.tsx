@@ -75,11 +75,11 @@ export function Header({ currentCurrency, onCurrencyChange, accountData, onNavig
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onNavigate?.('account-setup')}
+              onClick={() => onNavigate?.('auth')}
               className="flex items-center space-x-2 lg:space-x-3 lg:px-4 lg:h-10"
             >
-              <User className="w-4 h-4 lg:w-5 lg:h-5" />
-              <span className="hidden sm:inline lg:text-sm">Create Account</span>
+              <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
+              <span className="hidden sm:inline lg:text-sm">Access Wallet</span>
             </Button>
           )}
         </div>
