@@ -52,36 +52,48 @@ export function Header({ currentCurrency, onCurrencyChange, accountData, onNavig
             </SelectContent>
           </Select>
 
-          {accountData ? (
+          <div className="flex items-center space-x-2">
+            {/* Test Payment Button - Remove in production */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onNavigate?.('wallet-dashboard')}
-              className="flex items-center space-x-2 lg:space-x-3 lg:px-4 lg:h-10"
+              onClick={() => onNavigate?.('test-payment')}
+              className="hidden lg:flex items-center space-x-2 text-xs text-muted-foreground"
             >
-              <Avatar className="w-6 h-6 lg:w-8 lg:h-8">
-                <AvatarFallback className="text-xs lg:text-sm">
-                  {accountData.firstName[0]}{accountData.lastName[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div className="hidden lg:flex lg:flex-col lg:items-start">
-                <span className="text-sm font-medium">{accountData.firstName}</span>
-                <span className="text-xs text-muted-foreground">Premium User</span>
-              </div>
-              <span className="hidden sm:inline lg:hidden text-sm">{accountData.firstName}</span>
-              <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
+              <span>Test Payment</span>
             </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onNavigate?.('auth')}
-              className="flex items-center space-x-2 lg:space-x-3 lg:px-4 lg:h-10"
-            >
-              <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
-              <span className="hidden sm:inline lg:text-sm">Access Wallet</span>
-            </Button>
-          )}
+            
+            {accountData ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onNavigate?.('wallet-dashboard')}
+                className="flex items-center space-x-2 lg:space-x-3 lg:px-4 lg:h-10"
+              >
+                <Avatar className="w-6 h-6 lg:w-8 lg:h-8">
+                  <AvatarFallback className="text-xs lg:text-sm">
+                    {accountData.firstName[0]}{accountData.lastName[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="hidden lg:flex lg:flex-col lg:items-start">
+                  <span className="text-sm font-medium">{accountData.firstName}</span>
+                  <span className="text-xs text-muted-foreground">Premium User</span>
+                </div>
+                <span className="hidden sm:inline lg:hidden text-sm">{accountData.firstName}</span>
+                <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onNavigate?.('auth')}
+                className="flex items-center space-x-2 lg:space-x-3 lg:px-4 lg:h-10"
+              >
+                <Wallet className="w-4 h-4 lg:w-5 lg:h-5" />
+                <span className="hidden sm:inline lg:text-sm">Access Wallet</span>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </header>

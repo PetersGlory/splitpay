@@ -39,6 +39,7 @@ export function PaymentLink({ paymentData, onNavigate, accountData }: PaymentLin
       setLoading(true);
       try {
         const response = await PaymentAPI.getPaymentRequest(paymentData.id);
+        console.log(response.data)
         if (response.success && response.data) {
           setPaymentStatus(response.data.status);
           // Update link activity based on real data
@@ -66,7 +67,7 @@ export function PaymentLink({ paymentData, onNavigate, accountData }: PaymentLin
     return () => clearInterval(interval);
   }, [paymentData.id]);
 
-  const paymentUrl = `https://pay.app/link/${paymentData.id}`;
+  const paymentUrl = `${process.env.PAYMENT_LINK_DOMAIN || 'https://pay.app'}/p/${paymentData.linkToken || paymentData.id}`;
 
   const copyToClipboard = async () => {
     try {

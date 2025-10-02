@@ -52,9 +52,20 @@
     build: {
       target: 'esnext',
       outDir: 'build',
+      rollupOptions: {
+        input: {
+          main: './index.html',
+          payment: './payment.html',
+        },
+      },
     },
     server: {
       port: 3000,
       open: true,
+      historyApiFallback: {
+        rewrites: [
+          { from: /^\/p\/.*/, to: '/payment.html' }
+        ]
+      }
     },
   });

@@ -78,6 +78,7 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
       if (response.success && response.data) {
         setSuccess('Payment request created successfully!');
         onPaymentData(response.data);
+        console.log(response.data)
         setTimeout(() => {
           onNavigate('payment-link');
         }, 1000);
