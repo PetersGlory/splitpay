@@ -250,7 +250,7 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
       <div className="bg-white/80 backdrop-blur-md border-b border-border p-4">
         <div className="flex items-center justify-center">
           <div className="bg-primary/10 rounded-full px-4 py-2 text-primary text-sm font-medium">
-            spleetpay.com
+            SplitPay
           </div>
         </div>
       </div>
@@ -324,37 +324,6 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
           </div>
         </Card>
 
-        {/* Payment Methods */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Choose Payment Method</h3>
-          <div className="space-y-3">
-            {[
-              { id: 'card', label: 'Credit/Debit Card (Paystack)', icon: CreditCard, description: 'Visa, Mastercard, Verve' },
-              { id: 'bank-transfer', label: 'Bank Transfer', icon: Building2, description: 'Direct bank transfer' },
-              { id: 'opay', label: 'Opay Wallet', icon: Wallet, description: 'Pay with Opay account' },
-              { id: 'ussd', label: 'USSD Code', icon: DollarSign, description: 'Dial *737*50*amount#' }
-            ].map((method) => {
-              const IconComponent = method.icon;
-              return (
-                <Button
-                  key={method.id}
-                  variant="outline"
-                  className="w-full justify-start h-16 p-4"
-                  onClick={() => handlePaymentMethodSelect(method.id)}
-                >
-                  <div className="flex items-center w-full">
-                    <IconComponent className="w-5 h-5 mr-3 text-primary" />
-                    <div className="flex-1 text-left">
-                      <div className="font-medium">{method.label}</div>
-                      <div className="text-xs text-muted-foreground">{method.description}</div>
-                    </div>
-                    <ArrowRight className="w-4 h-4" />
-                  </div>
-                </Button>
-              );
-            })}
-          </div>
-        </Card>
 
         {/* Footer */}
         <div className="text-center mt-8 text-xs text-muted-foreground">
