@@ -62,10 +62,6 @@
     server: {
       port: 3000,
       open: true,
-      historyApiFallback: {
-        rewrites: [
-          { from: /^\/p\/.*/, to: '/payment.html' }
-        ]
-      }
+      historyApiFallback: true,
     },
   });

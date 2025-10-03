@@ -162,7 +162,7 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
   );
 
   const copyPaymentLink = async (participantId: string) => {
-    const paymentUrl = `${process.env.PAYMENT_LINK_DOMAIN || 'https://pay.app'}/p/${participantId}`;
+    const paymentUrl = `${paymentData.paymentLink}`;
     try {
       // Check if clipboard API is available
       if (navigator.clipboard && window.isSecureContext) {
@@ -200,20 +200,20 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
   };
 
   const shareViaWhatsApp = (participant: any) => {
-    const paymentUrl = `${process.env.PAYMENT_LINK_DOMAIN || 'https://pay.app'}/p/${participant.id}`;
+    const paymentUrl = `${paymentData.paymentLink}`;
     const message = `Hi ${participant.name}! You need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}". Pay here: ${paymentUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const shareViaEmail = (participant: any) => {
-    const paymentUrl = `${process.env.PAYMENT_LINK_DOMAIN || 'https://pay.app'}/p/${participant.id}`;
+    const paymentUrl = `${paymentData.paymentLink}`;
     const subject = `Payment Request - ${paymentData.description}`;
     const body = `Hi ${participant.name},\\n\\nYou need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}".\\n\\nPay here: ${paymentUrl}\\n\\nThanks!`;
     window.open(`mailto:${participant.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
   };
 
   const shareViaSMS = (participant: any) => {
-    const paymentUrl = `${process.env.PAYMENT_LINK_DOMAIN || 'https://pay.app'}/p/${participant.id}`;
+    const paymentUrl = `${paymentData.paymentLink}`;
     const message = `Hi ${participant.name}! You need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}". Pay here: ${paymentUrl}`;
     window.open(`sms:${participant.phone}?body=${encodeURIComponent(message)}`, '_blank');
   };

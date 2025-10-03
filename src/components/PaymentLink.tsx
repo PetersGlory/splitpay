@@ -67,7 +67,7 @@ export function PaymentLink({ paymentData, onNavigate, accountData }: PaymentLin
     return () => clearInterval(interval);
   }, [paymentData.id]);
 
-  const paymentUrl = `${process.env.PAYMENT_LINK_DOMAIN || 'https://pay.app'}/p/${paymentData.linkToken || paymentData.id}`;
+  const paymentUrl = `${paymentData.paymentLink}`;
 
   const copyToClipboard = async () => {
     try {
