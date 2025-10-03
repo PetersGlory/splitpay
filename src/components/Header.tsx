@@ -53,7 +53,7 @@ export function Header({ currentCurrency, onCurrencyChange, accountData, onNavig
           </Select>
 
           <div className="flex items-center space-x-2">
-            {/* Test Payment Button - Remove in production */}
+            {/* Debug Buttons - Remove in production */}
             <Button
               variant="ghost"
               size="sm"
@@ -61,6 +61,14 @@ export function Header({ currentCurrency, onCurrencyChange, accountData, onNavig
               className="hidden lg:flex items-center space-x-2 text-xs text-muted-foreground"
             >
               <span>Test Payment</span>
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onNavigate?.('debug-routing')}
+              className="hidden lg:flex items-center space-x-2 text-xs text-muted-foreground"
+            >
+              <span>Debug Routing</span>
             </Button>
             
             {accountData ? (

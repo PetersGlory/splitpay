@@ -1,16 +1,23 @@
 {
   "rewrites": [
     {
-      "source": "/payment",
+      "source": "/p/(.*)",
       "destination": "/payment.html"
     },
     {
-      "source": "/",
-      "destination": "/index.html"
-    },
+      "source": "/payment",
+      "destination": "/payment.html"
+    }
+  ],
+  "headers": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/payment.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
     }
   ],
   "buildCommand": "npm run build",

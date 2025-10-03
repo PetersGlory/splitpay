@@ -13,6 +13,9 @@ function PaymentApp() {
   };
 
   const linkToken = getLinkTokenFromPath();
+  
+  console.log('PaymentApp - Current path:', window.location.pathname);
+  console.log('PaymentApp - Extracted linkToken:', linkToken);
 
   if (!linkToken) {
     return (

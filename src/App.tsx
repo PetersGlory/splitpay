@@ -15,6 +15,7 @@ import { BottomNav } from './components/BottomNav';
 import { DesktopNav } from './components/DesktopNav';
 import { Header } from './components/Header';
 import { PaymentReceiverTest } from './components/PaymentReceiverTest';
+import { RoutingDebug } from './components/RoutingDebug';
 
 const currencies = {
   NGN: { symbol: '₦', name: 'Nigerian Naira' },
@@ -76,6 +77,8 @@ function AppContent() {
         return <WalletDashboard onNavigate={setCurrentScreen} accountData={user} />;
       case 'test-payment':
         return <PaymentReceiverTest />;
+      case 'debug-routing':
+        return <RoutingDebug />;
       default:
         return <Home onNavigate={setCurrentScreen} />;
     }
