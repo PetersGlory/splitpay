@@ -19,14 +19,11 @@ import {
   History,
   TrendingUp,
   Calendar,
-  Filter,
-  Loader2,
-  AlertCircle
+  Filter
 } from 'lucide-react';
 import { useCurrency } from '../App';
 import { WalletAPI, WalletTransaction } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import { AuthScreen } from './AuthScreen';
+import { copyWithFallback } from '../utils/clipboard';
 
 interface WalletDashboardProps {
   onNavigate: (screen: string) => void;
@@ -35,29 +32,18 @@ interface WalletDashboardProps {
 
 export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProps) {
   const { currencySymbol } = useCurrency();
-  const { isAuthenticated, user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [fundingAmount, setFundingAmount] = useState('');
   const [loading, setLoading] = useState(true);
   const [walletBalance, setWalletBalance] = useState<any>(null);
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [stats, setStats] = useState<any>(null);
-  const [showWithdraw, setShowWithdraw] = useState(false);
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawLoading, setWithdrawLoading] = useState(false);
-  const [withdrawError, setWithdrawError] = useState('');
-  const [withdrawSuccess, setWithdrawSuccess] = useState('');
 
   useEffect(() => {
     if (accountData) {
       loadWalletData();
     }
   }, [accountData]);
-
-  // Show auth screen if not authenticated - wallet requires authentication
-  if (!isAuthenticated || !user) {
-    return <AuthScreen onAuthSuccess={() => onNavigate('wallet-dashboard')} />;
-  }
 
   const loadWalletData = async () => {
     setLoading(true);
@@ -104,7 +90,7 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
           </Button>
           <div>
             <h1 className="text-2xl">Hi {accountData.firstName}! 👋</h1>
-            <p className="text-muted-foreground">Manage your SpleetPay wallet</p>
+            <p className="text-muted-foreground">Manage your SplitPay wallet</p>
           </div>
         </div>
         <div className="flex justify-center py-12">
@@ -115,13 +101,11 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
   }
 
   const copyAccountNumber = async () => {
-    try {
-      const accountNumber = accountData.wallet?.id || '1234567890';
-      await navigator.clipboard.writeText(accountNumber);
+    const accountNumber = accountData.wallet?.id || '1234567890';
+    const success = await copyWithFallback(accountNumber, `Account Number: ${accountNumber}`);
+    if (success) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
     }
   };
 
@@ -149,49 +133,6 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
     }
   };
 
-  const handleWithdraw = async () => {
-    if (!withdrawAmount || parseFloat(withdrawAmount) <= 0) {
-      setWithdrawError('Please enter a valid amount');
-      return;
-    }
-
-    if (parseFloat(withdrawAmount) > currentBalance) {
-      setWithdrawError('Insufficient balance');
-      return;
-    }
-
-    setWithdrawLoading(true);
-    setWithdrawError('');
-    setWithdrawSuccess('');
-
-    try {
-      const response = await WalletAPI.withdraw({
-        amount: parseFloat(withdrawAmount),
-        withdrawalMethod: 'bank_transfer',
-        bankDetails: {
-          bankName: 'SpleetPay Bank',
-          accountNumber: accountData.wallet?.id || '1234567890',
-          accountName: `${accountData.firstName} ${accountData.lastName}`
-        }
-      });
-
-      if (response.success) {
-        setWithdrawSuccess('Withdrawal request submitted successfully!');
-        setWithdrawAmount('');
-        setShowWithdraw(false);
-        // Refresh wallet data
-        await loadWalletData();
-      } else {
-        setWithdrawError(response.error?.message || 'Withdrawal failed');
-      }
-    } catch (error) {
-      console.error('Withdrawal error:', error);
-      setWithdrawError('Withdrawal failed. Please try again.');
-    } finally {
-      setWithdrawLoading(false);
-    }
-  };
-
   const currentBalance = walletBalance?.balance || accountData.wallet?.balance || 0;
 
   return (
@@ -208,7 +149,7 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
         </Button>
         <div>
           <h1 className="text-2xl">Hi {accountData.firstName}! 👋</h1>
-          <p className="text-muted-foreground">Manage your SpleetPay wallet</p>
+          <p className="text-muted-foreground">Manage your SplitPay wallet</p>
         </div>
       </div>
 
@@ -233,13 +174,9 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
               <Plus className="w-4 h-4" />
               Fund Wallet
             </Button>
-            <Button 
-              variant="outline" 
-              className="flex items-center gap-2"
-              onClick={() => setShowWithdraw(true)}
-            >
+            <Button variant="outline" className="flex items-center gap-2">
               <Send className="w-4 h-4" />
-              Withdraw
+              Send Money
             </Button>
           </div>
         </div>
@@ -268,13 +205,13 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
               </Button>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Bank: SpleetPay Bank</span>
+              <span>Bank: SplitPay Bank</span>
               <span>•</span>
               <span>Account Name: {accountData.firstName} {accountData.lastName}</span>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Use this account number to receive payments directly to your SpleetPay wallet
+            Use this account number to receive payments directly to your SplitPay wallet
           </p>
         </div>
       </Card>
@@ -398,95 +335,6 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
           </div>
         </TabsContent>
       </Tabs>
-
-      {/* Withdrawal Modal */}
-      {showWithdraw && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-md">
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Withdraw Funds</h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setShowWithdraw(false);
-                    setWithdrawAmount('');
-                    setWithdrawError('');
-                    setWithdrawSuccess('');
-                  }}
-                >
-                  ×
-                </Button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="withdrawAmount">Amount to Withdraw</Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                      {currencySymbol}
-                    </span>
-                    <Input
-                      id="withdrawAmount"
-                      type="number"
-                      placeholder="0.00"
-                      value={withdrawAmount}
-                      onChange={(e) => setWithdrawAmount(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Available balance: {currencySymbol}{formatAmount(currentBalance)}
-                  </p>
-                </div>
-
-                {withdrawError && (
-                  <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <AlertCircle className="w-4 h-4 text-red-500" />
-                    <p className="text-red-700 text-sm">{withdrawError}</p>
-                  </div>
-                )}
-
-                {withdrawSuccess && (
-                  <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <Check className="w-4 h-4 text-green-500" />
-                    <p className="text-green-700 text-sm">{withdrawSuccess}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <Button
-                    onClick={handleWithdraw}
-                    disabled={withdrawLoading || !withdrawAmount}
-                    className="flex-1"
-                  >
-                    {withdrawLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      'Withdraw'
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowWithdraw(false);
-                      setWithdrawAmount('');
-                      setWithdrawError('');
-                      setWithdrawSuccess('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
     </div>
   );
 }

@@ -192,7 +192,7 @@ export function RegisterForm({ onSwitchToLogin, onRegistrationSuccess }: Registe
       <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-semibold">Create Account</h2>
-          <p className="text-muted-foreground mt-2">Join SpleetPay and start splitting payments</p>
+          <p className="text-muted-foreground mt-2">Join SplitPay and start splitting payments</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -3,9 +3,9 @@ import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
-import { ArrowLeft, Share2, Copy, MessageSquare, Mail, QrCode, Check, Phone, Send, Facebook, Twitter, Clock, CheckCircle, Eye, RefreshCw, Wallet, Shield, TrendingUp, Loader2 } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, MessageSquare, Mail, QrCode, Check, Phone, Send, Facebook, Twitter, Clock, CheckCircle, Eye, RefreshCw, Wallet, Shield, TrendingUp } from 'lucide-react';
 import { useCurrency } from '../App';
-import { PaymentAPI, PaymentRequest } from '../services/api';
+import { copyWithFallback } from '../utils/clipboard';
 
 interface PaymentLinkProps {
   paymentData: any;
@@ -17,92 +17,55 @@ export function PaymentLink({ paymentData, onNavigate, accountData }: PaymentLin
   const { currencySymbol } = useCurrency();
   const [copied, setCopied] = useState(false);
   const [showQR, setShowQR] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState(paymentData?.status || 'pending');
+  const [paymentStatus, setPaymentStatus] = useState('pending');
   const [linkActivity, setLinkActivity] = useState({
     views: 0,
     lastViewed: null as string | null,
     paymentMethod: null as string | null,
     paidAt: null as string | null
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
   if (!paymentData) {
     return null;
   }
 
-  // Fetch real-time payment status
+  // Simulate real-time status updates
   useEffect(() => {
-    const fetchPaymentStatus = async () => {
-      if (!paymentData.id) return;
-      
-      setLoading(true);
-      try {
-        const response = await PaymentAPI.getPaymentRequest(paymentData.id);
-        console.log(response.data)
-        if (response.success && response.data) {
-          setPaymentStatus(response.data.status);
-          // Update link activity based on real data
-          if (response.data.totalCollected && response.data.totalCollected > 0) {
-            setLinkActivity(prev => ({
-              ...prev,
-              paymentMethod: 'Payment received',
-              paidAt: 'Recently'
-            }));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch payment status:', error);
-        setError('Failed to load payment status');
-      } finally {
-        setLoading(false);
-      }
-    };
+    const timer = setTimeout(() => {
+      setLinkActivity({
+        views: 3,
+        lastViewed: '2 minutes ago',
+        paymentMethod: null,
+        paidAt: null
+      });
+    }, 2000);
 
-    fetchPaymentStatus();
-    
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchPaymentStatus, 30000);
-    
-    return () => clearInterval(interval);
-  }, [paymentData.id]);
+    // Simulate payment completion after some time
+    const paymentTimer = setTimeout(() => {
+      const shouldComplete = Math.random() > 0.7; // 30% chance of completion for demo
+      if (shouldComplete) {
+        setPaymentStatus('completed');
+        setLinkActivity(prev => ({
+          ...prev,
+          paymentMethod: 'Card ending in 4532',
+          paidAt: 'Just now'
+        }));
+      }
+    }, 8000);
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(paymentTimer);
+    };
+  }, []);
 
   const paymentUrl = `${paymentData.paymentLink}`;
 
   const copyToClipboard = async () => {
-    try {
-      // Check if clipboard API is available
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(paymentUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } else {
-        // Fallback for older browsers or non-secure contexts
-        const textArea = document.createElement('textarea');
-        textArea.value = paymentUrl;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-          document.execCommand('copy');
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } catch (fallbackErr) {
-          console.error('Fallback copy failed:', fallbackErr);
-          // Show the URL to user as a last resort
-          alert(`Copy this link: ${paymentUrl}`);
-        }
-        
-        document.body.removeChild(textArea);
-      }
-    } catch (err) {
-      console.error('Failed to copy:', err);
-      // Show the URL to user as a fallback
-      alert(`Copy this link: ${paymentUrl}`);
+    const success = await copyWithFallback(paymentUrl, `Copy this link: ${paymentUrl}`);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -200,33 +163,8 @@ export function PaymentLink({ paymentData, onNavigate, accountData }: PaymentLin
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3>Payment Status</h3>
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={async () => {
-                setLoading(true);
-                try {
-                  const response = await PaymentAPI.getPaymentRequest(paymentData.id);
-                  if (response.success && response.data) {
-                    setPaymentStatus(response.data.status);
-                    if (response.data.totalCollected && response.data.totalCollected > 0) {
-                      setLinkActivity(prev => ({
-                        ...prev,
-                        paymentMethod: 'Payment received',
-                        paidAt: 'Recently'
-                      }));
-                    }
-                  }
-                } catch (error) {
-                  console.error('Failed to refresh payment status:', error);
-                  setError('Failed to refresh payment status');
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading}
-            >
-              <RefreshCw className={`w-4 h-4 mr-1 ${loading ? 'animate-spin' : ''}`} />
+            <Button variant="ghost" size="sm">
+              <RefreshCw className="w-4 h-4 mr-1" />
               Refresh
             </Button>
           </div>

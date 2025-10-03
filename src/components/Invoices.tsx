@@ -1,12 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { ArrowLeft, FileText, Download, Share2, Plus, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Download, Share2, Plus } from 'lucide-react';
 import { useCurrency } from '../App';
-import { InvoiceAPI } from '../services/api';
 
 interface InvoicesProps {
   onNavigate: (screen: string) => void;
@@ -22,76 +21,48 @@ export function Invoices({ onNavigate }: InvoicesProps) {
     amount: '',
     dueDate: ''
   });
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [creating, setCreating] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    loadInvoices();
-  }, []);
-
-  const loadInvoices = async () => {
-    setLoading(true);
-    setError('');
-    
-    try {
-      const response = await InvoiceAPI.getInvoices();
-      
-      if (response.success && response.data) {
-        setInvoices(response.data.invoices);
-      } else {
-        setError(response.error?.message || 'Failed to load invoices');
-      }
-    } catch (error) {
-      console.error('Failed to load invoices:', error);
-      setError('Network error. Please try again.');
-    } finally {
-      setLoading(false);
+  const invoices = [
+    {
+      id: 'INV-001',
+      clientName: 'Acme Corp',
+      description: 'Web Development Services',
+      amount: '250,000',
+      status: 'Paid',
+      dueDate: '2024-01-15',
+      createdDate: '2024-01-01'
+    },
+    {
+      id: 'INV-002',
+      clientName: 'Tech Solutions Ltd',
+      description: 'Mobile App Design',
+      amount: '180,000',
+      status: 'Pending',
+      dueDate: '2024-01-20',
+      createdDate: '2024-01-05'
+    },
+    {
+      id: 'INV-003',
+      clientName: 'StartupXYZ',
+      description: 'Consultation Services',
+      amount: '75,000',
+      status: 'Overdue',
+      dueDate: '2024-01-10',
+      createdDate: '2023-12-28'
     }
-  };
+  ];
 
-  const handleCreateInvoice = async () => {
-    if (!formData.clientName || !formData.clientEmail || !formData.description || !formData.amount || !formData.dueDate) {
-      setError('Please fill in all required fields');
-      return;
-    }
-
-    setCreating(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const response = await InvoiceAPI.createInvoice({
-        clientName: formData.clientName,
-        clientEmail: formData.clientEmail,
-        description: formData.description,
-        amount: parseFloat(formData.amount),
-        dueDate: formData.dueDate
-      });
-
-      if (response.success && response.data) {
-        setSuccess('Invoice created successfully!');
-        setFormData({
-          clientName: '',
-          clientEmail: '',
-          description: '',
-          amount: '',
-          dueDate: ''
-        });
-        setShowCreateForm(false);
-        // Refresh invoices list
-        await loadInvoices();
-      } else {
-        setError(response.error?.message || 'Failed to create invoice');
-      }
-    } catch (error) {
-      console.error('Invoice creation error:', error);
-      setError('Failed to create invoice. Please try again.');
-    } finally {
-      setCreating(false);
-    }
+  const handleCreateInvoice = () => {
+    // Mock invoice creation
+    console.log('Creating invoice:', formData);
+    setShowCreateForm(false);
+    setFormData({
+      clientName: '',
+      clientEmail: '',
+      description: '',
+      amount: '',
+      dueDate: ''
+    });
   };
 
   const getStatusColor = (status: string) => {
@@ -187,58 +158,13 @@ export function Invoices({ onNavigate }: InvoicesProps) {
             </div>
           </Card>
 
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-4 h-4 text-red-500" />
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-
-          {success && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <CheckCircle className="w-4 h-4 text-green-500" />
-              <p className="text-green-700 text-sm">{success}</p>
-            </div>
-          )}
-
           <Button 
             onClick={handleCreateInvoice}
             className="w-full h-12"
-            disabled={!formData.clientName || !formData.clientEmail || !formData.description || !formData.amount || !formData.dueDate || creating}
+            disabled={!formData.clientName || !formData.amount}
           >
-            {creating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              'Create Invoice'
-            )}
+            Create Invoice
           </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="p-4">
-        <div className="flex items-center justify-between pt-4 pb-4">
-          <div className="flex items-center">
-            <button 
-              onClick={() => onNavigate('home')}
-              className="mr-4 p-2 hover:bg-gray-100 rounded-full"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <h1 className="text-xl">Invoices</h1>
-          </div>
-        </div>
-        <div className="flex justify-center py-12">
-          <div className="flex items-center gap-2">
-            <Loader2 className="w-6 h-6 animate-spin" />
-            <span>Loading invoices...</span>
-          </div>
         </div>
       </div>
     );
@@ -263,16 +189,9 @@ export function Invoices({ onNavigate }: InvoicesProps) {
         </Button>
       </div>
 
-      {error && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-4">
-          <AlertCircle className="w-4 h-4 text-red-500" />
-          <p className="text-red-700 text-sm">{error}</p>
-        </div>
-      )}
-
       {/* Invoice List */}
       <div className="space-y-4">
-        {invoices.length > 0 ? invoices.map((invoice) => (
+        {invoices.map((invoice) => (
           <Card key={invoice.id} className="p-4">
             <div className="flex justify-between items-start mb-3">
               <div className="flex-1">
@@ -310,13 +229,7 @@ export function Invoices({ onNavigate }: InvoicesProps) {
               </Button>
             </div>
           </Card>
-        )) : (
-          <div className="text-center py-12 text-muted-foreground">
-            <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-            <p className="text-lg">No invoices yet</p>
-            <p className="text-sm">Create your first invoice to get started</p>
-          </div>
-        )}
+        ))}
       </div>
     </div>
   );

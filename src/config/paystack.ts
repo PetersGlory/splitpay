@@ -8,5 +8,5 @@ export const PAYSTACK_CONFIG = {
 // Payment Link Configuration
 export const PAYMENT_CONFIG = {
   linkDomain: import.meta.env.VITE_PAYMENT_LINK_DOMAIN || 'https://splitpay-amber.vercel.app',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://spleetpay-backend.onrender.com/api',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://SplitPay-backend.onrender.com/api',
 };

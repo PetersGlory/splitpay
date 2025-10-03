@@ -2,20 +2,20 @@ import React, { useState, createContext, useContext } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { AuthScreen } from './components/AuthScreen';
 import { FullPageLoader } from './components/LoadingSpinner';
-import { DemoModeIndicator } from './components/DemoModeIndicator';
+
 import { Home } from './components/Home';
 import { PayForMe } from './components/PayForMe';
 import { GroupSplit } from './components/GroupSplit';
 import { PaymentLink } from './components/PaymentLink';
 import { SplitPayment } from './components/SplitPayment';
 import { PaymentHistory } from './components/PaymentHistoryFixed';
+import { TransactionDetails } from './components/TransactionDetails';
 import { AccountSetup } from './components/AccountSetup';
 import { WalletDashboard } from './components/WalletDashboard';
 import { BottomNav } from './components/BottomNav';
 import { DesktopNav } from './components/DesktopNav';
 import { Header } from './components/Header';
-import { PaymentReceiverTest } from './components/PaymentReceiverTest';
-import { RoutingDebug } from './components/RoutingDebug';
+import { PaymentRequest } from './services/api';
 
 const currencies = {
   NGN: { symbol: '₦', name: 'Nigerian Naira' },
@@ -36,6 +36,7 @@ function AppContent() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [currentScreen, setCurrentScreen] = useState('home');
   const [paymentData, setPaymentData] = useState(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<PaymentRequest | null>(null);
   const [currency, setCurrency] = useState<keyof typeof currencies>('NGN');
 
   // Update currency when user data loads
@@ -45,22 +46,28 @@ function AppContent() {
     }
   }, [user]);
 
-  // Show loading screen while checking authentication
+  // Show loading screen while checking authentication (only on initial load)
   if (isLoading) {
-    return <FullPageLoader text="Loading SpleetPay..." />;
+    return <FullPageLoader text="Loading SplitPay..." />;
   }
 
-  // Show auth screen if not authenticated
-  // if (!isAuthenticated || !user) {
-  //   return <AuthScreen onAuthSuccess={() => setCurrentScreen('home')} />;
-  // }
+  // Protected routes that require authentication
+  const protectedRoutes = ['wallet-dashboard', 'account-setup'];
+  
+  // If trying to access protected route without auth, show auth screen
+  if (protectedRoutes.includes(currentScreen) && !isAuthenticated) {
+    return <AuthScreen onAuthSuccess={() => setCurrentScreen('home')} />;
+  }
+
+  const handleViewDetails = (payment: PaymentRequest) => {
+    setSelectedTransaction(payment);
+    setCurrentScreen('transaction-details');
+  };
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 'home':
         return <Home onNavigate={setCurrentScreen} />;
-      case 'auth':
-        return <AuthScreen onAuthSuccess={()=>setCurrentScreen("home")} />;
       case 'pay-for-me':
         return <PayForMe onNavigate={setCurrentScreen} onPaymentData={setPaymentData} />;
       case 'group-split':
@@ -70,15 +77,17 @@ function AppContent() {
       case 'split-payment':
         return <SplitPayment paymentData={paymentData} onNavigate={setCurrentScreen} accountData={user} />;
       case 'history':
-        return <PaymentHistory onNavigate={setCurrentScreen} />;
+        return <PaymentHistory onNavigate={setCurrentScreen} onViewDetails={handleViewDetails} />;
+      case 'transaction-details':
+        return selectedTransaction ? (
+          <TransactionDetails payment={selectedTransaction} onNavigate={setCurrentScreen} />
+        ) : (
+          <PaymentHistory onNavigate={setCurrentScreen} onViewDetails={handleViewDetails} />
+        );
       case 'account-setup':
         return <AccountSetup onNavigate={setCurrentScreen} onAccountCreated={() => {}} />;
       case 'wallet-dashboard':
         return <WalletDashboard onNavigate={setCurrentScreen} accountData={user} />;
-      case 'test-payment':
-        return <PaymentReceiverTest />;
-      case 'debug-routing':
-        return <RoutingDebug />;
       default:
         return <Home onNavigate={setCurrentScreen} />;
     }
@@ -92,7 +101,7 @@ function AppContent() {
 
   return (
     <CurrencyContext.Provider value={currencyContextValue}>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen">
         <div className="w-full mx-auto min-h-screen flex flex-col">
           <Header 
             currentCurrency={currency} 
@@ -101,13 +110,10 @@ function AppContent() {
             onNavigate={setCurrentScreen}
           />
           
-          {/* Demo Mode Indicator */}
-          {/* <DemoModeIndicator /> */}
-          
           {/* Desktop Layout */}
           <div className="hidden lg:flex lg:flex-1">
             {/* Desktop Sidebar */}
-            <aside className="w-64 border-r border-border bg-muted/20 p-6">
+            <aside className="w-64 p-6 glass-card-strong border-r border-border/50">
               <DesktopNav currentScreen={currentScreen} onNavigate={setCurrentScreen} />
             </aside>
             
@@ -120,8 +126,8 @@ function AppContent() {
           </div>
           
           {/* Mobile Layout */}
-          <main className="flex-1 pb-20 lg:hidden">
-            <div className="max-w-md mx-auto p-4">
+          <main className="flex-1 pb-20 lg:hidden overflow-y-auto">
+            <div className="max-w-md mx-auto px-3 py-3">
               {renderScreen()}
             </div>
           </main>

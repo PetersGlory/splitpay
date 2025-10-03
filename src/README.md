@@ -1,8 +1,8 @@
-# SpleetPay Backend API Documentation
+# SplitPay Backend API Documentation
 
 ## Overview
 
-SpleetPay is a modern mobile payment application that works across e-commerce, travel, food delivery, and fintech platforms. The app supports two main use cases:
+SplitPay is a modern mobile payment application that works across e-commerce, travel, food delivery, and fintech platforms. The app supports two main use cases:
 
 1. **"Pay for Me"** - Customers can share payment links/QR codes for others to pay on their behalf
 2. **"Group Split Payment"** - Bills can be split equally or unequally among participants
@@ -217,7 +217,7 @@ CREATE TABLE wallet_transactions (
   "amount": 50000.00,
   "currency": "NGN",
   "status": "partially_paid",
-  "payment_link": "https://pay.spleetpay.com/p/abc123",
+  "payment_link": "https://pay.SplitPay.com/p/abc123",
   "qr_code_url": "https://api.qrserver.com/v1/create-qr-code/?data=...",
   "participants": [...],
   "total_collected": 25000.00,
@@ -342,7 +342,7 @@ CREATE TABLE wallet_transactions (
   "type": "whatsapp", // or "sms", "email"
   "recipient": "+2348123456789",
   "message": "You have a pending payment of ₦12,500 for Weekend Trip",
-  "payment_link": "https://pay.spleetpay.com/p/abc123"
+  "payment_link": "https://pay.SplitPay.com/p/abc123"
 }
 ```
 
@@ -374,7 +374,7 @@ CREATE TABLE wallet_transactions (
 
 #### Connection
 ```javascript
-// Client connects to: wss://api.spleetpay.com/ws
+// Client connects to: wss://api.SplitPay.com/ws
 // Authentication via JWT token in query params
 ```
 
@@ -424,7 +424,7 @@ CREATE TABLE wallet_transactions (
 
 ```env
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/spleetpay
+DATABASE_URL=postgresql://user:password@localhost:5432/SplitPay
 REDIS_URL=redis://localhost:6379
 
 # JWT
@@ -445,21 +445,21 @@ TWILIO_AUTH_TOKEN=your-twilio-token
 TWILIO_PHONE_NUMBER=+1234567890
 
 SENDGRID_API_KEY=your-sendgrid-key
-SENDGRID_FROM_EMAIL=noreply@spleetpay.com
+SENDGRID_FROM_EMAIL=noreply@SplitPay.com
 
 # Exchange Rates
 EXCHANGE_API_KEY=your-exchange-api-key
 
 # App Configuration
 APP_ENV=production
-API_BASE_URL=https://api.spleetpay.com
-FRONTEND_URL=https://spleetpay.com
-PAYMENT_LINK_DOMAIN=https://pay.spleetpay.com
+API_BASE_URL=https://api.SplitPay.com
+FRONTEND_URL=https://SplitPay.com
+PAYMENT_LINK_DOMAIN=https://pay.SplitPay.com
 
 # File Storage (for QR codes)
 AWS_ACCESS_KEY_ID=your-aws-access-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key
-AWS_S3_BUCKET=spleetpay-assets
+AWS_S3_BUCKET=SplitPay-assets
 AWS_REGION=us-east-1
 ```
 
@@ -485,7 +485,7 @@ AWS_REGION=us-east-1
   },
   "generate_qr_code": {
     "payment_id": "uuid",
-    "payment_link": "https://pay.spleetpay.com/p/abc123"
+    "payment_link": "https://pay.SplitPay.com/p/abc123"
   }
 }
 ```
@@ -586,4 +586,4 @@ AWS_REGION=us-east-1
 - **Webhook Simulator**: Tool for testing webhook handling
 - **Status Page**: Real-time API status and uptime
 
-This comprehensive backend documentation provides all the necessary information for implementing a robust, secure, and scalable payment processing system for SpleetPay.
+This comprehensive backend documentation provides all the necessary information for implementing a robust, secure, and scalable payment processing system for SplitPay.

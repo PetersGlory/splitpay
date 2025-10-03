@@ -6,8 +6,8 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Switch } from './ui/switch';
 import { Alert } from './ui/alert';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { ArrowLeft, DollarSign, FileText, Plus, X, Users, Mail, Phone, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Badge } from './ui/badge';
+import { ArrowLeft, FileText, Plus, X, Users, Mail, Phone, Loader2, AlertCircle, CheckCircle, Sparkles, UserPlus, DollarSign } from 'lucide-react';
 import { useCurrency } from '../App';
 import { useAuth } from '../contexts/AuthContext';
 import { PaymentAPI } from '../services/api';
@@ -29,8 +29,8 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
     includeTip: false,
     expiresInHours: 48,
     participants: [
-      { id: '1', name: 'You', email: user?.email || '', phone: user?.phone || '', amount: 0, isPayer: false },
-      { id: '2', name: '', email: '', phone: '', amount: 0, isPayer: false }
+      { id: '1', name: 'You', email: user?.email || '', phone: user?.phone || '', amount: 0, isPayer: false, contactMethod: 'email' },
+      { id: '2', name: '', email: '', phone: '', amount: 0, isPayer: false, contactMethod: 'email' }
     ]
   });
 
@@ -45,7 +45,8 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
       email: '',
       phone: '',
       amount: 0,
-      isPayer: false
+      isPayer: false,
+      contactMethod: 'email'
     };
     setFormData({
       ...formData,
@@ -79,6 +80,8 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
       const equalAmount = grandTotal / formData.participants.length;
       return formData.participants.map(p => ({ ...p, amount: equalAmount }));
     }
+    
+    // For custom split, use the amounts set by user
     return formData.participants;
   };
 
@@ -88,12 +91,28 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
     if (!formData.description.trim()) return 'Description is required';
     if (formData.includeTip && formData.tip && parseFloat(formData.tip) < 0) return 'Tip amount cannot be negative';
     
-    // Check if non-"You" participants have contact info
     const participantsWithoutContact = formData.participants.filter((p, index) => 
       index > 0 && (!p.email?.trim() && !p.phone?.trim())
     );
     if (participantsWithoutContact.length > 0) {
       return 'All participants must have either an email or phone number';
+    }
+    
+    // Custom split validation
+    if (formData.splitType === 'custom') {
+      const totalAmount = parseFloat(formData.amount) || 0;
+      const tipAmount = formData.includeTip ? (parseFloat(formData.tip) || 0) : 0;
+      const grandTotal = totalAmount + tipAmount;
+      const sumOfAmounts = formData.participants.reduce((sum, p) => sum + (parseFloat(p.amount.toString()) || 0), 0);
+      
+      if (Math.abs(sumOfAmounts - grandTotal) > 0.01) {
+        return `Custom amounts must total ${currencySymbol}${grandTotal.toFixed(2)}. Current total: ${currencySymbol}${sumOfAmounts.toFixed(2)}`;
+      }
+      
+      const invalidAmounts = formData.participants.filter(p => !p.amount || parseFloat(p.amount.toString()) <= 0);
+      if (invalidAmounts.length > 0) {
+        return 'All participants must have a valid amount greater than 0';
+      }
     }
     
     return null;
@@ -113,7 +132,7 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
 
     try {
       const splitAmounts = calculateSplitAmounts();
-      const participants = splitAmounts.map((participant) => ({
+      const participants = splitAmounts.slice(1).map((participant) => ({
         name: participant.name || 'Participant',
         email: participant.email || undefined,
         phone: participant.phone || undefined,
@@ -154,33 +173,41 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
   const splitAmounts = calculateSplitAmounts();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3 lg:space-y-6">
       {/* Header */}
-      <div className="flex items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onNavigate('home')}
-          className="mr-3 p-2 lg:hidden"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-xl lg:text-2xl">Split Payment</h1>
-          <p className="text-muted-foreground lg:text-base">Share the bill with friends</p>
+      <div className="glass-card-strong rounded-2xl lg:rounded-3xl p-4 lg:p-6 border-white/60 shadow-lg">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onNavigate('home')}
+            className="mr-2 lg:mr-3 -ml-2 lg:hidden w-9 h-9 rounded-xl"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <div className="flex items-center gap-1.5 lg:gap-2 mb-0.5 lg:mb-1">
+              <h1 className="text-base lg:text-xl">Split Payment</h1>
+              <Badge variant="secondary" className="text-xs gradient-info text-white border-0">Quick</Badge>
+            </div>
+            <p className="text-xs lg:text-sm text-muted-foreground">Share the bill with friends</p>
+          </div>
         </div>
       </div>
 
-      <div className="lg:grid lg:grid-cols-3 lg:gap-8 space-y-6 lg:space-y-0">
+      <div className="lg:grid lg:grid-cols-5 lg:gap-6 space-y-3 lg:space-y-0">
 
         {/* Left Column - Basic Details */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-3 lg:space-y-4">
           {/* Total Amount */}
-          <Card className="p-6">
-            <div className="space-y-4">
-              <Label htmlFor="amount">Total Amount</Label>
+          <Card className="p-4 lg:p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="amount">Total Bill</Label>
+                <Badge variant="outline" className="text-xs">Required</Badge>
+              </div>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground text-lg">
                   {currencySymbol}
                 </span>
                 <Input
@@ -189,34 +216,37 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
                   placeholder="0.00"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="pl-10 text-lg h-12"
+                  className="pl-12 text-lg h-14 glass-card border-white/40 text-center"
                 />
               </div>
             </div>
           </Card>
 
           {/* Description */}
-          <Card className="p-6">
-            <div className="space-y-4">
+          <Card className="p-4 lg:p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
               <Label htmlFor="description">What's this for?</Label>
               <div className="relative">
-                <FileText className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                <FileText className="absolute left-4 top-4 w-4 h-4 text-muted-foreground" />
                 <Textarea
                   id="description"
-                  placeholder="Dinner at restaurant, Group trip, etc."
+                  placeholder="e.g., Dinner at restaurant, Group trip..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="pl-10 min-h-[100px] lg:min-h-[120px]"
+                  className="pl-11 min-h-[100px] glass-card border-white/40"
                 />
               </div>
             </div>
           </Card>
 
           {/* Tip Section */}
-          <Card className="p-6">
-            <div className="space-y-4">
+          <Card className="p-4 lg:p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="includeTip">Include Tip (Optional)</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="includeTip">Add Tip</Label>
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </div>
                 <Switch
                   id="includeTip"
                   checked={formData.includeTip}
@@ -225,16 +255,16 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
               </div>
               {formData.includeTip && (
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                     {currencySymbol}
                   </span>
                   <Input
                     id="tip"
                     type="number"
-                    placeholder="0.00"
+                    placeholder="Tip amount"
                     value={formData.tip}
                     onChange={(e) => setFormData({ ...formData, tip: e.target.value })}
-                    className="pl-10"
+                    className="pl-12 glass-card border-white/40"
                   />
                 </div>
               )}
@@ -242,284 +272,258 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
           </Card>
 
           {/* Split Type */}
-          <Card className="p-6">
-            <div className="space-y-4">
-              <Label>How to split?</Label>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+          <Card className="p-4 lg:p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
+              <Label>Split Method</Label>
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => setFormData({ ...formData, splitType: 'equal' })}
-                  className={`p-3 rounded-lg border text-center transition-colors ${
+                  className={`p-4 rounded-xl transition-all duration-300 ${
                     formData.splitType === 'equal'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border hover:border-primary/50'
+                      ? 'gradient-primary text-white shadow-md'
+                      : 'glass-card border-white/40 hover:border-primary/30'
                   }`}
                 >
-                  <Users className="w-5 h-5 mx-auto mb-1" />
-                  <span className="text-sm">Split Equally</span>
+                  <Users className={`w-5 h-5 mx-auto mb-1 ${formData.splitType === 'equal' ? 'text-white' : 'text-primary'}`} />
+                  <span className="text-xs">Equal Split</span>
                 </button>
                 <button
                   onClick={() => setFormData({ ...formData, splitType: 'custom' })}
-                  className={`p-3 rounded-lg border text-center transition-colors ${
+                  className={`p-4 rounded-xl transition-all duration-300 ${
                     formData.splitType === 'custom'
-                      ? 'border-primary bg-primary/10 text-primary'
-                      : 'border-border hover:border-primary/50'
+                      ? 'gradient-primary text-white shadow-md'
+                      : 'glass-card border-white/40 hover:border-primary/30'
                   }`}
                 >
-                  <DollarSign className="w-5 h-5 mx-auto mb-1" />
-                  <span className="text-sm">Custom Amounts</span>
+                  <Sparkles className={`w-5 h-5 mx-auto mb-1 ${formData.splitType === 'custom' ? 'text-white' : 'text-primary'}`} />
+                  <span className="text-xs">Custom Split</span>
                 </button>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* Middle Column - Participants */}
-        <div className="lg:col-span-2 space-y-6">
-          <Card className="p-6">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
+        {/* Right Column - Participants */}
+        <div className="lg:col-span-3 space-y-3 lg:space-y-4">
+          <Card className="p-4 lg:p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
                 <Label>Participants ({formData.participants.length})</Label>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addParticipant}
-                  className="text-primary"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Person
-                </Button>
               </div>
-              
-              <div className="space-y-4 max-h-[500px] lg:max-h-[600px] overflow-y-auto">
-                {formData.participants.map((participant, index) => (
-                  <Card key={participant.id} className="p-4 bg-muted/30">
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
+              <Button
+                onClick={addParticipant}
+                size="sm"
+                variant="outline"
+                className="glass-card border-white/40 hover:border-primary/30 h-8"
+              >
+                <UserPlus className="w-4 h-4 mr-1" />
+                Add
+              </Button>
+            </div>
+
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {formData.participants.map((participant, index) => (
+                <div
+                  key={participant.id}
+                  className="glass-card p-4 rounded-xl border-white/40 hover:border-primary/20 transition-all"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white flex-shrink-0 ${
+                      index === 0 ? 'gradient-primary' : 'gradient-info'
+                    }`}>
+                      <span>{index === 0 ? '👤' : index + 1}</span>
+                    </div>
+                    
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        {index === 0 ? (
+                          <span className="font-medium">You</span>
+                        ) : (
                           <Input
-                            placeholder={index === 0 ? "You" : "Participant name"}
+                            placeholder="Participant name"
                             value={participant.name}
                             onChange={(e) => updateParticipant(participant.id, 'name', e.target.value)}
-                            disabled={index === 0}
-                            className="h-10 font-medium"
+                            className="h-9 glass-card border-white/40 text-sm flex-1"
                           />
-                          {index === 0 && (
-                            <div className="mt-2">
-                              <Tabs defaultValue={"email"} className="w-full">
-                                <TabsList className="grid w-full grid-cols-2 h-8 mb-1">
-                                  <TabsTrigger value="email" className="text-xs">
-                                    <Mail className="w-3 h-3 mr-1" />
-                                    Email
-                                  </TabsTrigger>
-                                  <TabsTrigger value="phone" className="text-xs">
-                                    <Phone className="w-3 h-3 mr-1" />
-                                    Phone
-                                  </TabsTrigger>
-                                </TabsList>
-                                <TabsContent value="email" className="mt-1">
-                                  <Input
-                                    type="email"
-                                    placeholder="Your email"
-                                    value={participant.email}
-                                    onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
-                                    className="h-9"
-                                  />
-                                </TabsContent>
-                                <TabsContent value="phone" className="mt-1">
-                                  <Input
-                                    type="tel"
-                                    placeholder="Your phone"
-                                    value={participant.phone}
-                                    onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
-                                    className="h-9"
-                                  />
-                                </TabsContent>
-                              </Tabs>
-                            </div>
-                          )}
-                        </div>
-                        
-                        <div className="flex items-center gap-3 ml-4">
-                          <div className="text-right">
-                            <div className="text-xs text-muted-foreground mb-1">Amount</div>
-                            <div className="font-medium text-sm">
-                              {currencySymbol}{splitAmounts[index]?.amount.toFixed(2) || '0.00'}
-                            </div>
-                          </div>
-                          
-                          {formData.participants.length > 2 && index > 0 && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => removeParticipant(participant.id)}
-                              className="text-destructive p-1 h-8 w-8"
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          )}
-                        </div>
+                        )}
+                        {index > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeParticipant(participant.id)}
+                            className="h-8 w-8 p-0 hover:bg-red-100 hover:text-red-600 flex-shrink-0"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                       
                       {index > 0 && (
                         <div className="space-y-2">
-                          <Label className="text-xs text-muted-foreground">Contact Information (Choose at least one)</Label>
-                          <Tabs defaultValue="email" className="w-full">
-                            <TabsList className="grid w-full grid-cols-2 h-8">
-                              <TabsTrigger value="email" className="text-xs">
-                                <Mail className="w-3 h-3 mr-1" />
-                                Email
-                              </TabsTrigger>
-                              <TabsTrigger value="phone" className="text-xs">
-                                <Phone className="w-3 h-3 mr-1" />
-                                Phone
-                              </TabsTrigger>
-                            </TabsList>
-                            <TabsContent value="email" className="mt-2">
-                              <Input
-                                type="email"
-                                placeholder="participant@example.com"
-                                value={participant.email}
-                                onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
-                                className="h-9"
-                              />
-                            </TabsContent>
-                            <TabsContent value="phone" className="mt-2">
-                              <Input
-                                type="tel"
-                                placeholder="+234 801 234 5678"
-                                value={participant.phone}
-                                onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
-                                className="h-9"
-                              />
-                            </TabsContent>
-                          </Tabs>
+                          {/* Contact Method Toggle */}
+                          <div className="flex gap-1 p-1 glass-card rounded-lg border-white/40">
+                            <button
+                              onClick={() => updateParticipant(participant.id, 'contactMethod', 'email')}
+                              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs transition-all ${
+                                participant.contactMethod === 'email'
+                                  ? 'gradient-primary text-white shadow-sm'
+                                  : 'text-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              <Mail className="w-3 h-3" />
+                              Email
+                            </button>
+                            <button
+                              onClick={() => updateParticipant(participant.id, 'contactMethod', 'phone')}
+                              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs transition-all ${
+                                participant.contactMethod === 'phone'
+                                  ? 'gradient-primary text-white shadow-sm'
+                                  : 'text-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              <Phone className="w-3 h-3" />
+                              Phone
+                            </button>
+                          </div>
                           
-                          <div className="text-xs text-muted-foreground">
-                            Payment link will be sent via {participant.email ? 'email' : ''}{participant.email && participant.phone ? ' and ' : ''}{participant.phone ? 'SMS' : ''}
-                            {!participant.email && !participant.phone && 'manual sharing (add contact info)'}
+                          {/* Contact Input */}
+                          <div className="relative">
+                            {participant.contactMethod === 'email' ? (
+                              <>
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                                <Input
+                                  placeholder="Email address"
+                                  type="email"
+                                  value={participant.email}
+                                  onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
+                                  className="pl-9 h-9 glass-card border-white/40 text-sm"
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                                <Input
+                                  placeholder="Phone number"
+                                  type="tel"
+                                  value={participant.phone}
+                                  onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
+                                  className="pl-9 h-9 glass-card border-white/40 text-sm"
+                                />
+                              </>
+                            )}
                           </div>
                         </div>
                       )}
+                      
+                      {/* Amount Display/Input */}
+                      <div className="flex items-center justify-between pt-1 gap-2">
+                        <span className="text-xs text-muted-foreground">Amount:</span>
+                        {formData.splitType === 'custom' ? (
+                          <div className="relative flex-1 max-w-[120px]">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">
+                              {currencySymbol}
+                            </span>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={participant.amount || ''}
+                              onChange={(e) => updateParticipant(participant.id, 'amount', e.target.value)}
+                              className="pl-6 pr-2 h-8 glass-card border-white/40 text-sm text-right"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-sm font-medium text-primary">
+                            {currencySymbol}{splitAmounts[index]?.amount.toFixed(2) || '0.00'}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
+                  </div>
+                </div>
+              ))}
             </div>
+
+            {/* Summary */}
+            {formData.amount && parseFloat(formData.amount) > 0 && (
+              <div className="mt-4 pt-4 border-t border-white/40">
+                <div className="space-y-2">
+                  {formData.splitType === 'equal' ? (
+                    <div className="glass-card p-3 rounded-xl border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-primary" />
+                          <span className="text-sm font-medium text-foreground">Per Person (Equal Split)</span>
+                        </div>
+                        <span className="text-xl font-bold gradient-primary bg-clip-text text-transparent">
+                          {currencySymbol}{(splitAmounts[0]?.amount || 0).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="glass-card p-3 rounded-xl border-primary/30 bg-gradient-to-r from-primary/5 to-transparent">
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Total Assigned:</span>
+                          <span className="text-sm font-medium">
+                            {currencySymbol}{splitAmounts.reduce((sum, p) => sum + (p.amount || 0), 0).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground">Expected Total:</span>
+                          <span className="text-sm font-medium text-primary">
+                            {currencySymbol}{(parseFloat(formData.amount) + (formData.includeTip ? parseFloat(formData.tip || '0') : 0)).toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Grand Total */}
+                  <div className="flex justify-between items-center text-xs text-muted-foreground px-1">
+                    <span>Total Bill {formData.includeTip && '(with tip)'}</span>
+                    <span>{currencySymbol}{(parseFloat(formData.amount) + (formData.includeTip ? parseFloat(formData.tip || '0') : 0)).toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Error and Success Messages */}
           {error && (
-            <Alert className="border-red-200 bg-red-50">
+            <Alert className="border-red-200 bg-red-50/80 backdrop-blur">
               <AlertCircle className="h-4 w-4 text-red-500" />
-              <p className="text-red-700">{error}</p>
+              <p className="text-red-700 text-sm">{error}</p>
             </Alert>
           )}
 
           {success && (
-            <Alert className="border-green-200 bg-green-50">
+            <Alert className="border-green-200 bg-green-50/80 backdrop-blur">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <p className="text-green-700">{success}</p>
+              <p className="text-green-700 text-sm">{success}</p>
             </Alert>
           )}
 
-          {/* Create Split Button - Desktop */}
-          <div className="hidden lg:block">
-            <Button
-              onClick={handleSubmit}
-              disabled={loading || !formData.amount || !formData.description}
-              className="w-full h-14 text-lg"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                'Create Split Payment'
-              )}
-            </Button>
-          </div>
-        </div>
-
-        {/* Right Column - Summary (Desktop Only) */}
-        <div className="hidden lg:block space-y-6">
-          {formData.amount && (
-            <div className="sticky top-6">
-              <Card className="p-6 bg-primary/5 border-primary/20">
-                <div className="space-y-4">
-                  <h3 className="font-semibold text-center">Summary</h3>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Total Amount:</span>
-                      <span>{currencySymbol}{parseFloat(formData.amount).toFixed(2)}</span>
-                    </div>
-                    {formData.includeTip && formData.tip && (
-                      <div className="flex justify-between text-sm">
-                        <span>Tip:</span>
-                        <span>{currencySymbol}{parseFloat(formData.tip).toFixed(2)}</span>
-                      </div>
-                    )}
-                    <hr className="my-2" />
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-1">Each person pays</p>
-                      <p className="text-2xl font-bold text-primary">
-                        {currencySymbol}{((parseFloat(formData.amount) + (formData.includeTip ? parseFloat(formData.tip) || 0 : 0)) / formData.participants.length).toFixed(2)}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-xs text-muted-foreground text-center">
-                    Split among {formData.participants.length} participants
-                  </div>
-                </div>
-              </Card>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Summary - Mobile */}
-      {formData.amount && (
-        <Card className="p-6 bg-primary/5 border-primary/20 lg:hidden">
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span>Total Amount:</span>
-              <span>{currencySymbol}{parseFloat(formData.amount).toFixed(2)}</span>
-            </div>
-            {formData.includeTip && formData.tip && (
-              <div className="flex justify-between text-sm">
-                <span>Tip:</span>
-                <span>{currencySymbol}{parseFloat(formData.tip).toFixed(2)}</span>
-              </div>
+          {/* Create Split Button */}
+          <Button
+            onClick={handleSubmit}
+            disabled={loading || !formData.amount || !formData.description}
+            className="w-full h-11 lg:h-14 gradient-primary text-white shadow-lg hover:shadow-xl transition-all duration-300 text-sm lg:text-base"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" />
+                Create Split Payment
+              </>
             )}
-            <hr className="my-2" />
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-1">Each person pays</p>
-              <p className="text-2xl">
-                {currencySymbol}{((parseFloat(formData.amount) + (formData.includeTip ? parseFloat(formData.tip) || 0 : 0)) / formData.participants.length).toFixed(2)}
-              </p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {/* Create Split Button - Mobile */}
-      <div className="pb-4 lg:hidden">
-        <Button
-          onClick={handleSubmit}
-          disabled={loading || !formData.amount || !formData.description}
-          className="w-full h-12"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Creating...
-            </>
-          ) : (
-            'Create Split Payment'
-          )}
-        </Button>
+          </Button>
+        </div>
       </div>
     </div>
   );

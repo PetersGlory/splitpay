@@ -6,11 +6,11 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Switch } from './ui/switch';
 import { Alert } from './ui/alert';
-import { ArrowLeft, DollarSign, FileText, User, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Badge } from './ui/badge';
+import { ArrowLeft, DollarSign, FileText, User, Loader2, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
 import { useCurrency } from '../App';
 import { useAuth } from '../contexts/AuthContext';
 import { PaymentAPI } from '../services/api';
-import { AuthScreen } from './AuthScreen';
 
 interface PayForMeProps {
   onNavigate: (screen: string) => void;
@@ -19,7 +19,7 @@ interface PayForMeProps {
 
 export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
   const { currencySymbol, currency } = useCurrency();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   
   const [formData, setFormData] = useState({
     amount: '',
@@ -36,15 +36,13 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
   const [success, setSuccess] = useState('');
 
   const categories = [
-    { id: 'food', label: 'Food & Dining', icon: '🍽️' },
-    { id: 'travel', label: 'Travel', icon: '✈️' },
-    { id: 'shopping', label: 'Shopping', icon: '🛍️' },
-    { id: 'entertainment', label: 'Entertainment', icon: '🎬' },
-    { id: 'general', label: 'General', icon: '💳' },
+    { id: 'food', label: 'Food & Dining', icon: '🍽️', gradient: 'gradient-warning' },
+    { id: 'travel', label: 'Travel', icon: '✈️', gradient: 'gradient-info' },
+    { id: 'shopping', label: 'Shopping', icon: '🛍️', gradient: 'gradient-primary' },
+    { id: 'entertainment', label: 'Entertainment', icon: '🎬', gradient: 'gradient-secondary' },
+    { id: 'general', label: 'General', icon: '💳', gradient: 'gradient-success' },
   ];
-  // Note: Authentication is no longer required for creating payment requests
-  // Users can create payment links without logging in
-  
+
   const validateForm = () => {
     if (!formData.amount) return 'Amount is required';
     if (parseFloat(formData.amount) <= 0) return 'Amount must be greater than 0';
@@ -78,7 +76,6 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
       if (response.success && response.data) {
         setSuccess('Payment request created successfully!');
         onPaymentData(response.data);
-        console.log(response.data)
         setTimeout(() => {
           onNavigate('payment-link');
         }, 1000);
@@ -96,31 +93,39 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onNavigate('home')}
-          className="mr-3 p-2 lg:hidden"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl lg:text-3xl">Pay for Me</h1>
-          <p className="text-muted-foreground lg:text-lg">Let someone else pay for your purchase</p>
+      <div className="glass-card-strong rounded-3xl p-6 border-white/60 shadow-lg">
+        <div className="flex items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onNavigate('home')}
+            className="mr-3 -ml-2 lg:hidden w-9 h-9 rounded-xl"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-1">
+              <h1 className="text-xl lg:text-2xl">Pay for Me</h1>
+              <Badge variant="secondary" className="text-xs">Popular</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">Let someone else pay for your purchase</p>
+          </div>
         </div>
       </div>
 
-      <div className="lg:grid lg:grid-cols-2 lg:gap-8 space-y-6 lg:space-y-0">
+      <div className="lg:grid lg:grid-cols-2 lg:gap-6 space-y-4 lg:space-y-0">
 
         {/* Left Column */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Amount Input */}
-          <Card className="p-6">
-            <div className="space-y-4">
-              <Label htmlFor="amount">Amount</Label>
+          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="amount">Payment Amount</Label>
+                <Badge variant="outline" className="text-xs">Required</Badge>
+              </div>
               <div className="relative">
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground text-lg">
                   {currencySymbol}
                 </span>
                 <Input
@@ -129,41 +134,46 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
                   placeholder="0.00"
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="pl-10 text-lg h-12"
+                  className="pl-12 text-lg h-14 glass-card border-white/40 text-center"
                 />
               </div>
+              {formData.amount && parseFloat(formData.amount) > 0 && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Total: {currencySymbol}{parseFloat(formData.amount).toFixed(2)}
+                </p>
+              )}
             </div>
           </Card>
 
           {/* Purchase Details */}
-          <Card className="p-6">
-            <div className="space-y-4">
+          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
               <Label htmlFor="description">What's this for?</Label>
               <div className="relative">
-                <FileText className="absolute left-3 top-3 w-5 h-5 text-muted-foreground" />
+                <FileText className="absolute left-4 top-4 w-4 h-4 text-muted-foreground" />
                 <Textarea
                   id="description"
-                  placeholder="Lunch at Pizza Palace, Movie tickets, etc."
+                  placeholder="e.g., Lunch at Pizza Palace, Movie tickets..."
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="pl-10 min-h-[100px] lg:min-h-[120px]"
+                  className="pl-11 min-h-[100px] glass-card border-white/40"
                 />
               </div>
             </div>
           </Card>
 
           {/* Who's Paying */}
-          <Card className="p-6">
-            <div className="space-y-4">
-              <Label htmlFor="recipient">Who's paying? (Optional)</Label>
+          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
+              <Label htmlFor="recipient">Who's paying?</Label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   id="recipient"
-                  placeholder="Friend's name or leave blank"
+                  placeholder="Friend's name (optional)"
                   value={formData.recipientName}
                   onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                  className="pl-10"
+                  className="pl-11 glass-card border-white/40"
                 />
               </div>
             </div>
@@ -171,37 +181,46 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
         </div>
 
         {/* Right Column */}
-        <div className="space-y-6">
+        <div className="space-y-4">
           {/* Category Selection */}
-          <Card className="p-6">
-            <div className="space-y-4">
-              <Label>Category</Label>
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
-                {categories.map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => setFormData({ ...formData, category: category.id })}
-                    className={`p-3 rounded-lg border text-left transition-colors ${
-                      formData.category === category.id
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">{category.icon}</span>
-                      <span className="text-sm">{category.label}</span>
-                    </div>
-                  </button>
-                ))}
+          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
+              <Label>Payment Category</Label>
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+                {categories.map((category) => {
+                  const isSelected = formData.category === category.id;
+                  return (
+                    <button
+                      key={category.id}
+                      onClick={() => setFormData({ ...formData, category: category.id })}
+                      className={`p-3 rounded-xl transition-all duration-300 ${
+                        isSelected
+                          ? 'glass-card-strong border-primary/50 shadow-md scale-105'
+                          : 'glass-card border-white/40 hover:border-primary/30 hover:scale-102'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <div className={`w-8 h-8 rounded-lg ${category.gradient} flex items-center justify-center`}>
+                          <span className="text-base">{category.icon}</span>
+                        </div>
+                        <span className="text-sm flex-1 text-left">{category.label}</span>
+                        {isSelected && <CheckCircle className="w-4 h-4 text-primary" />}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </Card>
 
           {/* Tip Section */}
-          <Card className="p-6">
-            <div className="space-y-4">
+          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
+            <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label htmlFor="includeTip">Include Tip (Optional)</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="includeTip">Enable Tip</Label>
+                  <Sparkles className="w-4 h-4 text-primary" />
+                </div>
                 <Switch
                   id="includeTip"
                   checked={formData.includeTip}
@@ -210,16 +229,16 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
               </div>
               {formData.includeTip && (
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground">
                     {currencySymbol}
                   </span>
                   <Input
                     id="tip"
                     type="number"
-                    placeholder="0.00"
+                    placeholder="Suggested tip amount"
                     value={formData.tip}
                     onChange={(e) => setFormData({ ...formData, tip: e.target.value })}
-                    className="pl-10"
+                    className="pl-12 glass-card border-white/40"
                   />
                 </div>
               )}
@@ -228,16 +247,16 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
 
           {/* Error and Success Messages */}
           {error && (
-            <Alert className="border-red-200 bg-red-50">
+            <Alert className="border-red-200 bg-red-50/80 backdrop-blur">
               <AlertCircle className="h-4 w-4 text-red-500" />
-              <p className="text-red-700">{error}</p>
+              <p className="text-red-700 text-sm">{error}</p>
             </Alert>
           )}
 
           {success && (
-            <Alert className="border-green-200 bg-green-50">
+            <Alert className="border-green-200 bg-green-50/80 backdrop-blur">
               <CheckCircle className="h-4 w-4 text-green-500" />
-              <p className="text-green-700">{success}</p>
+              <p className="text-green-700 text-sm">{success}</p>
             </Alert>
           )}
 
@@ -246,7 +265,7 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
             <Button
               onClick={handleSubmit}
               disabled={loading || !formData.amount || !formData.description}
-              className="w-full h-12 lg:h-14 lg:text-lg"
+              className="w-full h-12 lg:h-14 gradient-primary text-white shadow-lg hover:shadow-xl transition-all duration-300"
             >
               {loading ? (
                 <>
@@ -254,7 +273,10 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
                   Creating...
                 </>
               ) : (
-                'Create Payment Link'
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Create Payment Link
+                </>
               )}
             </Button>
           </div>

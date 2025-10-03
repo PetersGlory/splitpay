@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -6,9 +6,7 @@ import { Progress } from './ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
 import { ArrowLeft, Share2, Copy, MessageSquare, Mail, Check, Users, Phone, Send, Eye, CreditCard, Building2, Smartphone, CheckCircle, Wallet, Shield, TrendingUp, Clock, DollarSign, Loader2 } from 'lucide-react';
 import { useCurrency } from '../App';
-import { PaymentAPI, PaymentRequest, Participant } from '../services/api';
-import { useAuth } from '../contexts/AuthContext';
-import { AuthScreen } from './AuthScreen';
+import { copyWithFallback } from '../utils/clipboard';
 
 interface SplitPaymentProps {
   paymentData: any;
@@ -21,47 +19,33 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
   const [copied, setCopied] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
-  const [currentPaymentData, setCurrentPaymentData] = useState(paymentData);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const {isAuthenticated, user} = useAuth();
 
   if (!paymentData) {
     return null;
   }
-  // Fetch real-time payment data
-  useEffect(() => {
-    const fetchPaymentData = async () => {
-      if (!paymentData.id) return;
-      
-      setLoading(true);
-      try {
-        const response = await PaymentAPI.getPaymentRequest(paymentData.id);
-        if (response.success && response.data) {
-          setCurrentPaymentData(response.data);
-        }
-      } catch (error) {
-        console.error('Failed to fetch payment data:', error);
-        setError('Failed to load payment data');
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchPaymentData();
-    
-    // Poll for updates every 30 seconds
-    const interval = setInterval(fetchPaymentData, 30000);
-    
-    return () => clearInterval(interval);
-  }, [paymentData.id]);
+  // Mock payment method data for participants who have paid
+  const mockPaymentMethods = [
+    'Card ending in 4532',
+    'Bank Transfer - First Bank',
+    'Card ending in 7891',
+    'Mobile Money - MTN',
+    'Bank Transfer - GTBank'
+  ];
 
-  // Use current payment data or fallback to initial data
-  const paymentDataToUse = currentPaymentData || paymentData;
+  // Add payment method details to participants
+  const participantsWithPaymentDetails = paymentData.participants.map((participant: any, index: number) => ({
+    ...participant,
+    isCurrentUser: index === 0, // First participant is considered "You"
+    paymentMethod: participant.isPayer ? mockPaymentMethods[index % mockPaymentMethods.length] : null,
+    paidAt: participant.isPayer ? (() => {
+      const hours = Math.floor(Math.random() * 24) + 1;
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    })() : null
+  }));
 
-  const totalAmount = parseFloat(paymentDataToUse.amount);
-  const participants = paymentDataToUse.participants || [];
-  const paidAmount = participants.filter((p: Participant) => p.hasPaid).reduce((sum: number, p: Participant) => sum + p.amount, 0);
+  const totalAmount = parseFloat(paymentData.amount);
+  const paidAmount = participantsWithPaymentDetails.filter(p => p.isPayer).length * (totalAmount / participantsWithPaymentDetails.length);
   const progressPercentage = (paidAmount / totalAmount) * 100;
 
   const getPaymentMethodIcon = (method: string) => {
@@ -70,7 +54,6 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
     if (method?.includes('Mobile')) return <Smartphone className="w-4 h-4" />;
     return <CreditCard className="w-4 h-4" />;
   };
-  
 
   const PaymentDetailsDialog = ({ participant }: { participant: any }) => (
     <Dialog>
@@ -149,7 +132,7 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
           <div className="space-y-3">
             <div className="flex justify-between">
               <span className="text-sm">Amount:</span>
-              <span className="font-medium">{currencySymbol}{(totalAmount / participants.length).toFixed(2)}</span>
+              <span className="font-medium">{currencySymbol}{(totalAmount / participantsWithPaymentDetails.length).toFixed(2)}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm">Payment Method:</span>
@@ -162,64 +145,35 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
   );
 
   const copyPaymentLink = async (participantId: string) => {
-    const paymentUrl = `${paymentData.paymentLink}`;
-    try {
-      // Check if clipboard API is available
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(paymentUrl);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
-      } else {
-        // Fallback for older browsers or non-secure contexts
-        const textArea = document.createElement('textarea');
-        textArea.value = paymentUrl;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        
-        try {
-          document.execCommand('copy');
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        } catch (fallbackErr) {
-          console.error('Fallback copy failed:', fallbackErr);
-          // Show the URL to user as a last resort
-          alert(`Copy this link: ${paymentUrl}`);
-        }
-        
-        document.body.removeChild(textArea);
-      }
-    } catch (err) {
-      console.error('Failed to copy:', err);
-      // Show the URL to user as a fallback
-      alert(`Copy this link: ${paymentUrl}`);
+    const paymentUrl = `${paymentData.id}/${participantId}`;
+    const success = await copyWithFallback(paymentUrl, `Copy this link: ${paymentUrl}`);
+    if (success) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
   const shareViaWhatsApp = (participant: any) => {
-    const paymentUrl = `${paymentData.paymentLink}`;
+    const paymentUrl = `https://pay.app/split/${paymentData.id}/${participant.id}`;
     const message = `Hi ${participant.name}! You need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}". Pay here: ${paymentUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const shareViaEmail = (participant: any) => {
-    const paymentUrl = `${paymentData.paymentLink}`;
+    const paymentUrl = `https://pay.app/split/${paymentData.id}/${participant.id}`;
     const subject = `Payment Request - ${paymentData.description}`;
     const body = `Hi ${participant.name},\\n\\nYou need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}".\\n\\nPay here: ${paymentUrl}\\n\\nThanks!`;
     window.open(`mailto:${participant.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
   };
 
   const shareViaSMS = (participant: any) => {
-    const paymentUrl = `${paymentData.paymentLink}`;
+    const paymentUrl = `https://pay.app/split/${paymentData.id}/${participant.id}`;
     const message = `Hi ${participant.name}! You need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}". Pay here: ${paymentUrl}`;
     window.open(`sms:${participant.phone}?body=${encodeURIComponent(message)}`, '_blank');
   };
 
   const sendInvitesToAll = () => {
-    const unpaidParticipants = participants.filter(p => !p.hasPaid);
+    const unpaidParticipants = paymentData.participants.filter(p => !p.isPayer);
     unpaidParticipants.forEach(participant => {
       if (participant.email) {
         shareViaEmail(participant);
@@ -235,47 +189,22 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
     setPaymentProcessing(true);
     setShowPaymentDialog(true);
     
-    try {
-      // Process payment through API
-      const response = await PaymentAPI.processParticipantPayment(
-        paymentDataToUse.id,
-        participant.id,
-        {
-          amount: participant.amount,
-          tipAmount: 0,
-          paymentMethod: 'card',
-          paymentDetails: {
-            cardNumber: '4532****1234', // In real app, this would come from form
-            cvv: '123',
-            expiryMonth: '12',
-            expiryYear: '2025'
-          }
-        }
-      );
-
-      if (response.success) {
-        // Refresh payment data
-        const refreshResponse = await PaymentAPI.getPaymentRequest(paymentDataToUse.id);
-        if (refreshResponse.success && refreshResponse.data) {
-          setCurrentPaymentData(refreshResponse.data);
-        }
-        setPaymentProcessing(false);
-        setShowPaymentDialog(false);
-      } else {
-        setError(response.error?.message || 'Payment failed');
-        setPaymentProcessing(false);
-        setShowPaymentDialog(false);
-      }
-    } catch (error) {
-      console.error('Payment processing error:', error);
-      setError('Payment processing failed. Please try again.');
+    // Simulate payment processing
+    setTimeout(() => {
+      // Mark participant as paid
+      participant.isPayer = true;
+      participant.paymentMethod = 'Card ending in 4532';
+      participant.paidAt = 'Just now';
+      
       setPaymentProcessing(false);
       setShowPaymentDialog(false);
-    }
+      
+      // Force re-render by updating the component state
+      // In a real app, you'd update the parent state or use a state management solution
+      window.location.reload();
+    }, 3000);
   };
 
-  // Note: Authentication is no longer required for viewing split payments
-  // Users can view and participate in split payments without logging in
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -345,29 +274,33 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
           </div>
           
           <div className="space-y-3">
-            {participants.map((participant: Participant, index: number) => (
+            {participantsWithPaymentDetails.map((participant: any, index: number) => (
               <div key={participant.id} className="p-4 bg-muted/50 rounded-lg">
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                      <Users className="w-5 h-5 text-primary" />
+                      {participant.isCurrentUser ? (
+                        <DollarSign className="w-5 h-5 text-primary" />
+                      ) : (
+                        <Users className="w-5 h-5 text-primary" />
+                      )}
                     </div>
                     <div>
                       <p className="font-medium">
-                        {participant.name || `Person ${index + 1}`}
+                        {participant.isCurrentUser ? 'You' : participant.name || `Person ${index + 1}`}
                       </p>
                       <p className="text-sm text-muted-foreground">{currencySymbol}{participant.amount.toFixed(2)}</p>
                       
-                      {participant.hasPaid && participant.paymentMethod && (
+                      {participant.isPayer && participant.paymentMethod && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                           {getPaymentMethodIcon(participant.paymentMethod)}
                           <span>{participant.paymentMethod}</span>
                           <span>•</span>
-                          <span>{participant.paidAt ? new Date(participant.paidAt).toLocaleString() : 'Recently'}</span>
+                          <span>{participant.paidAt}</span>
                         </div>
                       )}
                       
-                      {!participant.hasPaid && (participant.email || participant.phone) && (
+                      {!participant.isPayer && (participant.email || participant.phone) && (
                         <div className="text-xs text-muted-foreground mt-1">
                           {participant.email && <span>📧 {participant.email}</span>}
                           {participant.email && participant.phone && <span> • </span>}
@@ -378,7 +311,7 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    {participant.hasPaid ? (
+                    {participant.isPayer ? (
                       <>
                         <Badge variant="default" className="bg-green-500">
                           Paid
@@ -393,62 +326,65 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
                   </div>
                 </div>
                 
-                {!participant.hasPaid && (
+                {!participant.isPayer && (
                   <div className="flex gap-2 mt-3">
-                    <Button
-                      onClick={() => handlePayNow(participant)}
-                      disabled={paymentProcessing}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                      size="sm"
-                    >
-                      <DollarSign className="w-3 h-3 mr-1" />
-                      Pay Now
-                    </Button>
-                    <div className="flex gap-2">
+                    {participant.isCurrentUser ? (
                       <Button
-                        variant="outline"
+                        onClick={() => handlePayNow(participant)}
+                        disabled={paymentProcessing}
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
                         size="sm"
-                        onClick={() => copyPaymentLink(participant.id)}
-                        className="text-xs"
                       >
-                        <Copy className="w-3 h-3 mr-1" />
-                        Copy Link
+                        <DollarSign className="w-3 h-3 mr-1" />
+                        Pay Now
                       </Button>
-                      
-                      {participant.email && (
+                    ) : (
+                      <>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => shareViaEmail(participant)}
+                          onClick={() => copyPaymentLink(participant.id)}
                           className="text-xs"
                         >
-                          <Mail className="w-3 h-3 mr-1" />
-                          Email
+                          <Copy className="w-3 h-3 mr-1" />
+                          Copy Link
                         </Button>
-                      )}
-                      
-                      {participant.phone && (
+                        
+                        {participant.email && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => shareViaEmail(participant)}
+                            className="text-xs"
+                          >
+                            <Mail className="w-3 h-3 mr-1" />
+                            Email
+                          </Button>
+                        )}
+                        
+                        {participant.phone && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => shareViaSMS(participant)}
+                            className="text-xs"
+                          >
+                            <Phone className="w-3 h-3 mr-1" />
+                            SMS
+                          </Button>
+                        )}
+                        
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => shareViaSMS(participant)}
+                          onClick={() => shareViaWhatsApp(participant)}
                           className="text-xs"
                         >
-                          <Phone className="w-3 h-3 mr-1" />
-                          SMS
+                          <MessageSquare className="w-3 h-3 mr-1" />
+                          WhatsApp
                         </Button>
-                      )}
-                      
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => shareViaWhatsApp(participant)}
-                        className="text-xs"
-                      >
-                        <MessageSquare className="w-3 h-3 mr-1" />
-                        WhatsApp
-                      </Button>
-                    </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -520,12 +456,12 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
           </p>
           
           <div className="space-y-3">
-            {participants.filter((p: Participant) => !p.hasPaid).map((participant: Participant, index: number) => (
+            {paymentData.participants.filter((p: any) => !p.isPayer).map((participant: any, index: number) => (
               <div key={participant.id} className="p-3 border rounded-lg">
                 <div className="flex justify-between items-center">
                   <div>
                     <p className="font-medium">
-                      {participant.name || `Person ${index + 1}`}
+                      {participant.isCurrentUser ? 'You' : participant.name || `Person ${index + 1}`}
                     </p>
                     <p className="text-sm text-muted-foreground">{currencySymbol}{participant.amount.toFixed(2)}</p>
                   </div>
