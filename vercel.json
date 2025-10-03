@@ -2,16 +2,12 @@
   "rewrites": [
     {
       "source": "/p/(.*)",
-      "destination": "/payment.html"
-    },
-    {
-      "source": "/payment",
-      "destination": "/payment.html"
+      "destination": "/p/$1"
     }
   ],
   "headers": [
     {
-      "source": "/payment.html",
+      "source": "/p/(.*)",
       "headers": [
         {
           "key": "Cache-Control",
