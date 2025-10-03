@@ -8,14 +8,14 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #8B5A8C;
+  --primary: #030213;
   --primary-foreground: oklch(1 0 0);
-  --secondary: #F3E8F3;
-  --secondary-foreground: #8B5A8C;
+  --secondary: oklch(0.95 0.0058 264.53);
+  --secondary-foreground: #030213;
   --muted: #ececf0;
   --muted-foreground: #717182;
-  --accent: #E6D7E6;
-  --accent-foreground: #8B5A8C;
+  --accent: #e9ebef;
+  --accent-foreground: #030213;
   --destructive: #d4183d;
   --destructive-foreground: #ffffff;
   --border: rgba(0, 0, 0, 0.1);
@@ -33,7 +33,7 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #8B5A8C;
+  --sidebar-primary: #030213;
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -186,6 +186,84 @@
 
 html {
   font-size: var(--font-size);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .grid-responsive {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hide-mobile-nav {
+    display: none;
+  }
+  
+  /* Desktop enhancements */
+  .desktop-card-hover {
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .desktop-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Desktop responsive utilities */
+@media (min-width: 1280px) {
+  .container-desktop {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+/* Smooth transitions for responsive design */
+@media (prefers-reduced-motion: no-preference) {
+  .transition-responsive {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Custom animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
 
 /* Responsive improvements */
