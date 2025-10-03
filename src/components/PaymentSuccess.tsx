@@ -16,7 +16,7 @@ export default function PaymentSuccess({ onComplete, amount = 3450, transactionI
       <div className="bg-white/80 backdrop-blur-md border-b border-emerald-100 p-4">
         <div className="flex items-center justify-center">
           <div className="bg-emerald-100 rounded-full px-4 py-2 text-emerald-700 text-sm font-medium">
-            spleetpay.com
+          SplitPay
           </div>
         </div>
       </div>

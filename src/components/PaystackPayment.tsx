@@ -135,7 +135,7 @@ export function PaystackPayment({
       <div className="bg-white/80 backdrop-blur-md border-b border-border p-4">
         <div className="flex items-center justify-center">
           <div className="bg-blue-100 rounded-full px-4 py-2 text-blue-700 text-sm font-medium">
-            spleetpay.com
+          SplitPay
           </div>
         </div>
       </div>
