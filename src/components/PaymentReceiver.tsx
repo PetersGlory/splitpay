@@ -324,6 +324,25 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
           </div>
         </Card>
 
+        {/* Payment Methods */}
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4">Choose Payment Method</h3>
+          <div className="space-y-3">
+            <Button
+              variant="outline"
+              className="w-full justify-start h-16 p-4"
+              onClick={() => handlePaymentMethodSelect('card')}
+            >
+              <div className="flex items-center w-full">
+                <CreditCard className="w-5 h-5 mr-3 text-primary" />
+                <div className="flex-1 text-left">
+                  <div className="font-medium">Proceed to Payment</div>
+                </div>
+                <ArrowRight className="w-4 h-4" />
+              </div>
+            </Button>
+          </div>
+        </Card>
 
         {/* Footer */}
         <div className="text-center mt-8 text-xs text-muted-foreground">
