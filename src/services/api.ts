@@ -390,17 +390,51 @@ export const PaymentAPI = {
       tipAmount?: number;
       paymentMethod: string;
       paymentDetails: {
-        cardNumber: string;
-        cvv: string;
-        expiryMonth: string;
-        expiryYear: string;
+        cardNumber?: string;
+        cvv?: string;
+        expiryMonth?: string;
+        expiryYear?: string;
+        email?: string;
+        reference?: string;
       };
     }
   ): Promise<ApiResponse<{
     transaction: Transaction;
     paymentUrl?: string;
+    paystackUrl?: string;
   }>> {
     return apiClient.post(`/payments/${paymentId}/participants/${participantId}/pay`, data);
+  },
+
+  async initializePayment(
+    paymentId: string,
+    participantId: string,
+    data: {
+      amount: number;
+      tipAmount?: number;
+      paymentMethod: string;
+      email: string;
+      metadata?: Record<string, any>;
+    }
+  ): Promise<ApiResponse<{
+    authorizationUrl: string;
+    accessCode: string;
+    reference: string;
+  }>> {
+    return apiClient.post(`/payments/${paymentId}/participants/${participantId}/initialize`, data);
+  },
+
+  async verifyPayment(
+    paymentId: string,
+    participantId: string,
+    reference: string
+  ): Promise<ApiResponse<{
+    transaction: Transaction;
+    paymentStatus: 'success' | 'failed' | 'pending';
+  }>> {
+    return apiClient.post(`/payments/${paymentId}/participants/${participantId}/verify`, {
+      reference
+    });
   },
 };
 

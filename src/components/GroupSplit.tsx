@@ -113,7 +113,7 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
 
     try {
       const splitAmounts = calculateSplitAmounts();
-      const participants = splitAmounts.slice(1).map((participant) => ({
+      const participants = splitAmounts.map((participant) => ({
         name: participant.name || 'Participant',
         email: participant.email || undefined,
         phone: participant.phone || undefined,
@@ -166,8 +166,8 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl lg:text-3xl">Split Payment</h1>
-          <p className="text-muted-foreground lg:text-lg">Share the bill with friends</p>
+          <h1 className="text-xl lg:text-2xl">Split Payment</h1>
+          <p className="text-muted-foreground lg:text-base">Share the bill with friends</p>
         </div>
       </div>
 
@@ -303,6 +303,40 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
                             disabled={index === 0}
                             className="h-10 font-medium"
                           />
+                          {index === 0 && (
+                            <div className="mt-2">
+                              <Tabs defaultValue={"email"} className="w-full">
+                                <TabsList className="grid w-full grid-cols-2 h-8 mb-1">
+                                  <TabsTrigger value="email" className="text-xs">
+                                    <Mail className="w-3 h-3 mr-1" />
+                                    Email
+                                  </TabsTrigger>
+                                  <TabsTrigger value="phone" className="text-xs">
+                                    <Phone className="w-3 h-3 mr-1" />
+                                    Phone
+                                  </TabsTrigger>
+                                </TabsList>
+                                <TabsContent value="email" className="mt-1">
+                                  <Input
+                                    type="email"
+                                    placeholder="Your email"
+                                    value={participant.email}
+                                    onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
+                                    className="h-9"
+                                  />
+                                </TabsContent>
+                                <TabsContent value="phone" className="mt-1">
+                                  <Input
+                                    type="tel"
+                                    placeholder="Your phone"
+                                    value={participant.phone}
+                                    onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
+                                    className="h-9"
+                                  />
+                                </TabsContent>
+                              </Tabs>
+                            </div>
+                          )}
                         </div>
                         
                         <div className="flex items-center gap-3 ml-4">

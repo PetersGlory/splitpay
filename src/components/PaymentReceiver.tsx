@@ -25,12 +25,13 @@ import PaymentMethods from './PaymentMethods';
 import PaymentProcessing from './PaymentProcessing';
 import PaymentSuccess from './PaymentSuccess';
 import PaymentFailure from './PaymentFailure';
+import { PaystackPayment } from './PaystackPayment';
 
 interface PaymentReceiverProps {
   linkToken: string;
 }
 
-type PaymentStep = 'details' | 'methods' | 'processing' | 'success' | 'failure';
+type PaymentStep = 'details' | 'methods' | 'paystack' | 'processing' | 'success' | 'failure';
 
 export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
   const [currentStep, setCurrentStep] = useState<PaymentStep>('details');
@@ -73,7 +74,12 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
 
   const handlePaymentMethodConfirm = (method: string) => {
     setSelectedMethod(method);
-    handleMakePayment();
+    
+    if (method === 'card' || method === 'paystack') {
+      setCurrentStep('paystack');
+    } else {
+      handleMakePayment();
+    }
   };
 
   const handleMakePayment = async () => {
@@ -83,19 +89,16 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
     setCurrentStep('processing');
     
     try {
-      // Call the actual payment API
+      // For non-Paystack payment methods, use the existing API
       const response = await PaymentAPI.processParticipantPayment(
         paymentData.id,
-        'current-user', // This would be the participant ID
+        linkToken, // Using linkToken as participantId
         {
           amount: paymentData.amount,
           tipAmount: 0,
           paymentMethod: selectedMethod,
           paymentDetails: {
-            cardNumber: '4532****1234', // In real app, this would come from form
-            cvv: '123',
-            expiryMonth: '12',
-            expiryYear: '2025'
+            // For bank transfer, USSD, etc.
           }
         }
       );
@@ -109,6 +112,19 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
       console.error('Payment processing error:', error);
       setCurrentStep('failure');
     }
+  };
+
+  const handlePaystackSuccess = (transactionData: any) => {
+    setCurrentStep('success');
+  };
+
+  const handlePaystackFailure = (error: string) => {
+    console.error('Paystack payment failed:', error);
+    setCurrentStep('failure');
+  };
+
+  const handlePaystackCancel = () => {
+    setCurrentStep('methods');
   };
 
   const handleBack = () => {
@@ -198,6 +214,16 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
         <PaymentMethods 
           onBack={handleBack}
           onPayment={handlePaymentMethodConfirm}
+        />
+      );
+    case 'paystack':
+      return (
+        <PaystackPayment
+          paymentData={paymentData}
+          linkToken={linkToken}
+          onSuccess={handlePaystackSuccess}
+          onFailure={handlePaystackFailure}
+          onCancel={handlePaystackCancel}
         />
       );
     case 'processing':
@@ -303,22 +329,27 @@ export function PaymentReceiver({ linkToken }: PaymentReceiverProps) {
           <h3 className="font-semibold mb-4">Choose Payment Method</h3>
           <div className="space-y-3">
             {[
-              { id: 'bank-transfer', label: 'Bank Transfer', icon: Building2 },
-              { id: 'card', label: 'Credit/Debit Card', icon: CreditCard },
-              { id: 'opay', label: 'Opay Wallet', icon: Wallet },
-              { id: 'ussd', label: 'USSD Code', icon: DollarSign }
+              { id: 'card', label: 'Credit/Debit Card (Paystack)', icon: CreditCard, description: 'Visa, Mastercard, Verve' },
+              { id: 'bank-transfer', label: 'Bank Transfer', icon: Building2, description: 'Direct bank transfer' },
+              { id: 'opay', label: 'Opay Wallet', icon: Wallet, description: 'Pay with Opay account' },
+              { id: 'ussd', label: 'USSD Code', icon: DollarSign, description: 'Dial *737*50*amount#' }
             ].map((method) => {
               const IconComponent = method.icon;
               return (
                 <Button
                   key={method.id}
                   variant="outline"
-                  className="w-full justify-start h-12 p-4"
+                  className="w-full justify-start h-16 p-4"
                   onClick={() => handlePaymentMethodSelect(method.id)}
                 >
-                  <IconComponent className="w-5 h-5 mr-3 text-primary" />
-                  <span className="flex-1 text-left">{method.label}</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <div className="flex items-center w-full">
+                    <IconComponent className="w-5 h-5 mr-3 text-primary" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">{method.label}</div>
+                      <div className="text-xs text-muted-foreground">{method.description}</div>
+                    </div>
+                    <ArrowRight className="w-4 h-4" />
+                  </div>
                 </Button>
               );
             })}

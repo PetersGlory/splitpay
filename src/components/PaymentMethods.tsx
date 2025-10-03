@@ -22,39 +22,31 @@ export default function PaymentMethods({ onBack, onPayment }: PaymentMethodsProp
   const paymentMethods = [
     {
       id: 'card',
-      label: 'Pay with Card',
+      label: 'Pay with Card (Paystack)',
       icon: CreditCard,
-      color: 'text-purple-600'
+      color: 'text-purple-600',
+      description: 'Visa, Mastercard, Verve'
     },
     {
       id: 'bank-transfer',
-      label: 'Pay with Bank Transfer',
+      label: 'Bank Transfer',
       icon: Building2,
-      color: 'text-purple-600'
+      color: 'text-purple-600',
+      description: 'Direct bank transfer'
     },
     {
       id: 'opay',
-      label: 'Pay with Opay',
+      label: 'Opay Wallet',
       icon: Wallet,
-      color: 'text-purple-600'
-    },
-    {
-      id: 'bank',
-      label: 'Pay with Bank',
-      icon: Landmark,
-      color: 'text-purple-600'
+      color: 'text-purple-600',
+      description: 'Pay with Opay account'
     },
     {
       id: 'ussd',
-      label: 'Pay with USSD',
+      label: 'USSD Code',
       icon: DollarSign,
-      color: 'text-purple-600'
-    },
-    {
-      id: 'qr-code',
-      label: 'Pay with QR Code',
-      icon: QrCode,
-      color: 'text-purple-600'
+      color: 'text-purple-600',
+      description: 'Dial *737*50*amount#'
     }
   ];
 
@@ -83,14 +75,23 @@ export default function PaymentMethods({ onBack, onPayment }: PaymentMethodsProp
           {paymentMethods.map((method) => {
             const IconComponent = method.icon;
             return (
-              <div key={method.id} className="flex items-center space-x-4 p-4 rounded-lg border border-gray-200 bg-white">
+              <div key={method.id} className={`flex items-center space-x-4 p-4 rounded-lg border transition-colors cursor-pointer ${
+                selectedMethod === method.id 
+                  ? 'border-purple-500 bg-purple-50' 
+                  : 'border-gray-200 bg-white hover:border-purple-300'
+              }`}>
                 <IconComponent className={`h-6 w-6 ${method.color}`} />
-                <Label 
-                  htmlFor={method.id} 
-                  className="flex-1 text-gray-900 cursor-pointer"
-                >
-                  {method.label}
-                </Label>
+                <div className="flex-1">
+                  <Label 
+                    htmlFor={method.id} 
+                    className="text-gray-900 cursor-pointer font-medium"
+                  >
+                    {method.label}
+                  </Label>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {method.description}
+                  </p>
+                </div>
                 <RadioGroupItem 
                   value={method.id} 
                   id={method.id}
