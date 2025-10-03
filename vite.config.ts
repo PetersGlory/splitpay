@@ -54,8 +54,7 @@
       outDir: 'build',
       rollupOptions: {
         input: {
-          main: './index.html',
-          payment: './payment.html',
+          main: './index.html'
         },
       },
     },
