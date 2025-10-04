@@ -91,8 +91,8 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
     if (!formData.description.trim()) return 'Description is required';
     if (formData.includeTip && formData.tip && parseFloat(formData.tip) < 0) return 'Tip amount cannot be negative';
     
-    const participantsWithoutContact = formData.participants.filter((p, index) => 
-      index > 0 && (!p.email?.trim() && !p.phone?.trim())
+    const participantsWithoutContact = formData.participants.filter((p) => 
+      (!p.email?.trim() && !p.phone?.trim())
     );
     if (participantsWithoutContact.length > 0) {
       return 'All participants must have either an email or phone number';
@@ -132,11 +132,12 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
 
     try {
       const splitAmounts = calculateSplitAmounts();
-      const participants = splitAmounts.slice(1).map((participant) => ({
-        name: participant.name || 'Participant',
+      const participants = splitAmounts.map((participant, index) => ({
+        name: index === 0 ? 'You' : (participant.name || 'Participant'),
         email: participant.email || undefined,
         phone: participant.phone || undefined,
-        amount: participant.amount
+        amount: participant.amount,
+        isPayer: index === 0 // Mark the first participant (user) as the payer
       }));
 
       const totalAmount = parseFloat(formData.amount);
@@ -359,62 +360,60 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
                         )}
                       </div>
                       
-                      {index > 0 && (
-                        <div className="space-y-2">
-                          {/* Contact Method Toggle */}
-                          <div className="flex gap-1 p-1 glass-card rounded-lg border-white/40">
-                            <button
-                              onClick={() => updateParticipant(participant.id, 'contactMethod', 'email')}
-                              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs transition-all ${
-                                participant.contactMethod === 'email'
-                                  ? 'gradient-primary text-white shadow-sm'
-                                  : 'text-muted-foreground hover:text-foreground'
-                              }`}
-                            >
-                              <Mail className="w-3 h-3" />
-                              Email
-                            </button>
-                            <button
-                              onClick={() => updateParticipant(participant.id, 'contactMethod', 'phone')}
-                              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs transition-all ${
-                                participant.contactMethod === 'phone'
-                                  ? 'gradient-primary text-white shadow-sm'
-                                  : 'text-muted-foreground hover:text-foreground'
-                              }`}
-                            >
-                              <Phone className="w-3 h-3" />
-                              Phone
-                            </button>
-                          </div>
-                          
-                          {/* Contact Input */}
-                          <div className="relative">
-                            {participant.contactMethod === 'email' ? (
-                              <>
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-                                <Input
-                                  placeholder="Email address"
-                                  type="email"
-                                  value={participant.email}
-                                  onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
-                                  className="pl-9 h-9 glass-card border-white/40 text-sm"
-                                />
-                              </>
-                            ) : (
-                              <>
-                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
-                                <Input
-                                  placeholder="Phone number"
-                                  type="tel"
-                                  value={participant.phone}
-                                  onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
-                                  className="pl-9 h-9 glass-card border-white/40 text-sm"
-                                />
-                              </>
-                            )}
-                          </div>
+                      {/* Contact Method Toggle - Show for all participants including index 0 */}
+                      <div className="space-y-2">
+                        <div className="flex gap-1 p-1 glass-card rounded-lg border-white/40">
+                          <button
+                            onClick={() => updateParticipant(participant.id, 'contactMethod', 'email')}
+                            className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs transition-all ${
+                              participant.contactMethod === 'email'
+                                ? 'gradient-primary text-white shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <Mail className="w-3 h-3" />
+                            Email
+                          </button>
+                          <button
+                            onClick={() => updateParticipant(participant.id, 'contactMethod', 'phone')}
+                            className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded text-xs transition-all ${
+                              participant.contactMethod === 'phone'
+                                ? 'gradient-primary text-white shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                          >
+                            <Phone className="w-3 h-3" />
+                            Phone
+                          </button>
                         </div>
-                      )}
+                        
+                        {/* Contact Input - Show for all participants including index 0 */}
+                        <div className="relative">
+                          {participant.contactMethod === 'email' ? (
+                            <>
+                              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                              <Input
+                                placeholder={index === 0 ? "Your email address" : "Email address"}
+                                type="email"
+                                value={participant.email}
+                                onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
+                                className="pl-9 h-9 glass-card border-white/40 text-sm"
+                              />
+                            </>
+                          ) : (
+                            <>
+                              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                              <Input
+                                placeholder={index === 0 ? "Your phone number" : "Phone number"}
+                                type="tel"
+                                value={participant.phone}
+                                onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
+                                className="pl-9 h-9 glass-card border-white/40 text-sm"
+                              />
+                            </>
+                          )}
+                        </div>
+                      </div>
                       
                       {/* Amount Display/Input */}
                       <div className="flex items-center justify-between pt-1 gap-2">
@@ -456,7 +455,7 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
                           <DollarSign className="w-4 h-4 text-primary" />
                           <span className="text-sm font-medium text-foreground">Per Person (Equal Split)</span>
                         </div>
-                        <span className="text-xl font-bold gradient-primary bg-clip-text text-transparent">
+                        <span className="text-xl font-bold bg-clip-text text-primary">
                           {currencySymbol}{(splitAmounts[0]?.amount || 0).toFixed(2)}
                         </span>
                       </div>
