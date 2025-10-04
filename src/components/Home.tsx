@@ -58,12 +58,12 @@ export function Home({ onNavigate }: HomeProps) {
   ];
 
   return (
-    <div className="space-y-3 lg:space-y-6 animate-slideIn">
+    <div className="space-y-2 lg:space-y-6 animate-slideIn">
       {/* Welcome Header */}
       <div className="glass-card-strong rounded-2xl lg:rounded-3xl p-4 lg:p-8 border-white/60 shadow-xl">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="mb-1 lg:mb-2">Hi Friend! 👋</h1>
+            <h1 className="mb-1 font-bold lg:mb-2">Hi Friend! 👋</h1>
             <p className="text-sm lg:text-base text-muted-foreground">Ready to make payments simple?</p>
           </div>
           <div className="hidden lg:block">
