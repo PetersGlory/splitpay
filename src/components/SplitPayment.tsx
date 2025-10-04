@@ -145,7 +145,8 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
   );
 
   const copyPaymentLink = async (participantId: string) => {
-    const paymentUrl = `${paymentData.id}/${participantId}`;
+    console.log(paymentData)
+    const paymentUrl = `${participantId}`;
     const success = await copyWithFallback(paymentUrl, `Copy this link: ${paymentUrl}`);
     if (success) {
       setCopied(true);
@@ -154,20 +155,20 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
   };
 
   const shareViaWhatsApp = (participant: any) => {
-    const paymentUrl = `https://pay.app/split/${paymentData.id}/${participant.id}`;
+    const paymentUrl =`${participant.participantLink}`;
     const message = `Hi ${participant.name}! You need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}". Pay here: ${paymentUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   };
 
   const shareViaEmail = (participant: any) => {
-    const paymentUrl = `https://pay.app/split/${paymentData.id}/${participant.id}`;
+    const paymentUrl =`${participant.participantLink}`;
     const subject = `Payment Request - ${paymentData.description}`;
     const body = `Hi ${participant.name},\\n\\nYou need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}".\\n\\nPay here: ${paymentUrl}\\n\\nThanks!`;
     window.open(`mailto:${participant.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_blank');
   };
 
   const shareViaSMS = (participant: any) => {
-    const paymentUrl = `https://pay.app/split/${paymentData.id}/${participant.id}`;
+    const paymentUrl =`${participant.participantLink}`;
     const message = `Hi ${participant.name}! You need to pay ${currencySymbol}${participant.amount.toFixed(2)} for "${paymentData.description}". Pay here: ${paymentUrl}`;
     window.open(`sms:${participant.phone}?body=${encodeURIComponent(message)}`, '_blank');
   };
@@ -469,7 +470,7 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => copyPaymentLink(participant.id)}
+                      onClick={() => copyPaymentLink(participant.participantLink)}
                     >
                       <Copy className="w-4 h-4 mr-1" />
                       Copy Link
