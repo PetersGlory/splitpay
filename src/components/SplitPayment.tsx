@@ -290,7 +290,7 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
                       <p className="font-medium">
                         {participant.isCurrentUser ? 'You' : participant.name || `Person ${index + 1}`}
                       </p>
-                      <p className="text-sm text-muted-foreground">{currencySymbol}{participant.amount.toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground">{currencySymbol}{Number(participant.amount).toFixed(2)}</p>
                       
                       {participant.isPayer && participant.paymentMethod && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
@@ -464,7 +464,7 @@ export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaym
                     <p className="font-medium">
                       {participant.isCurrentUser ? 'You' : participant.name || `Person ${index + 1}`}
                     </p>
-                    <p className="text-sm text-muted-foreground">{currencySymbol}{participant.amount.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">{currencySymbol}{Number(participant.amount).toFixed(2)}</p>
                   </div>
                   <div className="flex space-x-2">
                     <Button

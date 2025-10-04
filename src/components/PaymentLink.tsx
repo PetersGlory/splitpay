@@ -278,7 +278,7 @@ export function PaymentLink({ paymentData, onNavigate, accountData }: PaymentLin
           <div className="flex justify-center">
             <div className="w-48 h-48 bg-white border-2 border-border rounded-lg flex items-center justify-center">
               <div className="w-40 h-40 bg-gradient-to-br from-black to-gray-600 rounded-lg flex items-center justify-center">
-                <QrCode className="w-20 h-20 text-white" />
+                <img src={paymentData.qrCodeUrl} alt="QR Code" className="w-20 h-20" />
               </div>
             </div>
           </div>
