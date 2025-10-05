@@ -90,7 +90,7 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
           </Button>
           <div>
             <h1 className="text-2xl">Hi {accountData.firstName}! 👋</h1>
-            <p className="text-muted-foreground">Manage your SplitPay wallet</p>
+            <p className="text-muted-foreground">Manage your SpleetPay wallet</p>
           </div>
         </div>
         <div className="flex justify-center py-12">
@@ -149,7 +149,7 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
         </Button>
         <div>
           <h1 className="text-2xl">Hi {accountData.firstName}! 👋</h1>
-          <p className="text-muted-foreground">Manage your SplitPay wallet</p>
+          <p className="text-muted-foreground">Manage your SpleetPay wallet</p>
         </div>
       </div>
 
@@ -205,13 +205,13 @@ export function WalletDashboard({ onNavigate, accountData }: WalletDashboardProp
               </Button>
             </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span>Bank: SplitPay Bank</span>
+              <span>Bank: SpleetPay Bank</span>
               <span>•</span>
               <span>Account Name: {accountData.firstName} {accountData.lastName}</span>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Use this account number to receive payments directly to your SplitPay wallet
+            Use this account number to receive payments directly to your SpleetPay wallet
           </p>
         </div>
       </Card>

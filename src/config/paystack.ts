@@ -1,3 +1,5 @@
+//@ts-nocheck
+
 // Paystack Configuration
 export const PAYSTACK_CONFIG = {
   publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_your_public_key_here',
@@ -7,6 +9,6 @@ export const PAYSTACK_CONFIG = {
 
 // Payment Link Configuration
 export const PAYMENT_CONFIG = {
-  linkDomain: import.meta.env.VITE_PAYMENT_LINK_DOMAIN || 'https://splitpay-amber.vercel.app',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://SplitPay-backend.onrender.com/api',
+  linkDomain: import.meta.env.VITE_PAYMENT_LINK_DOMAIN || 'https://SplitPay-amber.vercel.app',
+  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'https://SpleetPay-backend.onrender.com/api',
 };

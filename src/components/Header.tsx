@@ -29,7 +29,7 @@ export function Header({ currentCurrency, onCurrencyChange, accountData, onNavig
           </div>
           <div>
             <div className="flex items-center gap-1.5 lg:gap-2">
-              <h1 className="bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">SplitPay</h1>
+              <h1 className="bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent">SpleetPay</h1>
               <Sparkles className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-primary hidden lg:block" />
             </div>
             <p className="text-xs text-muted-foreground hidden lg:block">Simplifying payments together</p>

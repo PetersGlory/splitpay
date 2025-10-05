@@ -8,13 +8,13 @@ import { ArrowLeft, Share2, Copy, MessageSquare, Mail, Check, Users, Phone, Send
 import { useCurrency } from '../App';
 import { copyWithFallback } from '../utils/clipboard';
 
-interface SplitPaymentProps {
+interface SpleetPaymentProps {
   paymentData: any;
   onNavigate: (screen: string) => void;
   accountData?: any;
 }
 
-export function SplitPayment({ paymentData, onNavigate, accountData }: SplitPaymentProps) {
+export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPaymentProps) {
   const { currencySymbol } = useCurrency();
   const [copied, setCopied] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);

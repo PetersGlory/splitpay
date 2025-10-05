@@ -7,7 +7,7 @@ import { Home } from './components/Home';
 import { PayForMe } from './components/PayForMe';
 import { GroupSplit } from './components/GroupSplit';
 import { PaymentLink } from './components/PaymentLink';
-import { SplitPayment } from './components/SplitPayment';
+import { SpleetPayment } from './components/SplitPayment';
 import { PaymentHistory } from './components/PaymentHistoryFixed';
 import { TransactionDetails } from './components/TransactionDetails';
 import { AccountSetup } from './components/AccountSetup';
@@ -48,7 +48,7 @@ function AppContent() {
 
   // Show loading screen while checking authentication (only on initial load)
   if (isLoading) {
-    return <FullPageLoader text="Loading SplitPay..." />;
+    return <FullPageLoader text="Loading SpleetPay..." />;
   }
 
   // Protected routes that require authentication
@@ -75,7 +75,7 @@ function AppContent() {
       case 'payment-link':
         return <PaymentLink paymentData={paymentData} onNavigate={setCurrentScreen} accountData={user} />;
       case 'split-payment':
-        return <SplitPayment paymentData={paymentData} onNavigate={setCurrentScreen} accountData={user} />;
+        return <SpleetPayment paymentData={paymentData} onNavigate={setCurrentScreen} accountData={user} />;
       case 'history':
         return <PaymentHistory onNavigate={setCurrentScreen} onViewDetails={handleViewDetails} />;
       case 'transaction-details':

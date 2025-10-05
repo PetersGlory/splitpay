@@ -1,4 +1,4 @@
-// API Configuration and Service Layer for SplitPay
+// API Configuration and Service Layer for SpleetPay
 const API_BASE_URL = "https://spleetpay-backend.onrender.com/api";
 
 // Types
@@ -103,8 +103,8 @@ interface ApiResponse<T> {
 
 // Token management
 class TokenManager {
-  private static readonly TOKEN_KEY = 'SplitPay_token';
-  private static readonly REFRESH_TOKEN_KEY = 'SplitPay_refresh_token';
+  private static readonly TOKEN_KEY = 'SpleetPay_token';
+  private static readonly REFRESH_TOKEN_KEY = 'SpleetPay_refresh_token';
 
   static setTokens(token: string, refreshToken: string) {
     localStorage.setItem(this.TOKEN_KEY, token);

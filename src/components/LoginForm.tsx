@@ -260,7 +260,7 @@ export function LoginForm({ onSwitchToRegister, onLoginSuccess }: LoginFormProps
       <div className="space-y-6">
         <div className="text-center">
           <h2 className="text-2xl font-semibold">Welcome Back</h2>
-          <p className="text-muted-foreground mt-2">Sign in to your SplitPay account</p>
+          <p className="text-muted-foreground mt-2">Sign in to your SpleetPay account</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

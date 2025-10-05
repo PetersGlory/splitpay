@@ -18,7 +18,7 @@ export function AuthScreen({ onAuthSuccess }: AuthScreenProps) {
           <Button onClick={onAuthSuccess} className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span className="text-white font-bold text-xl">SP</span>
           </Button>
-          <h1 className="text-3xl font-bold text-foreground">SplitPay</h1>
+          <h1 className="text-3xl font-bold text-foreground">SpleetPay</h1>
           <p className="text-muted-foreground mt-2">
             Split payments, share costs, collect funds
           </p>
