@@ -74,7 +74,7 @@ export function Home({ onNavigate }: HomeProps) {
         </div>
         
         {/* Quick Stats */}
-        <div className="grid grid-cols-3 gap-2 lg:gap-3 mt-4 lg:mt-6">
+        <div className="hidden lg:grid grid-cols-3 gap-2 lg:gap-3 mt-4 lg:mt-6">
           {features.map((feature, index) => (
             <div 
               key={index} 
@@ -125,9 +125,9 @@ export function Home({ onNavigate }: HomeProps) {
               </div>
 
               {/* Content */}
-              <div className="p-4 lg:p-6">
-                <h4 className="mb-1.5 lg:mb-2 text-sm lg:text-base group-hover:text-primary transition-colors">{action.title}</h4>
-                <p className="text-xs lg:text-sm text-muted-foreground mb-3 lg:mb-4">{action.description}</p>
+              <div className="pt-2 pb-4 px-4 lg:pt-3 lg:pb-6 lg:px-6">
+                <h4 className="mb-1 lg:mb-1.5 text-sm lg:text-base group-hover:text-primary transition-colors">{action.title}</h4>
+                <p className="text-xs lg:text-sm text-muted-foreground mb-2 lg:mb-3">{action.description}</p>
                 
                 <div className="flex items-center text-primary group-hover:translate-x-1 transition-transform duration-300">
                   <span className="text-xs lg:text-sm mr-1">Get Started</span>
