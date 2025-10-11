@@ -26,7 +26,7 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
     splitType: 'equal',
     expiresInHours: 48,
     participants: [
-      { id: '1', name: 'You', email: user?.email || '', phone: '', amount: 0 },
+      { id: '1', name: 'You', email: user?.email || 'info@spleetpay.com', phone: '', amount: 0 },
       { id: '2', name: '', email: '', phone: '', amount: 0 }
     ]
   });
@@ -114,12 +114,13 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
         currency: currency,
         splitType: formData.splitType,
         expiresInHours: formData.expiresInHours,
-        participants: splits.map(p => ({
-          name: p.name || 'Participant',
-          email: p.email,
-          phone: p.phone || '',
-          amount: p.amount
-        }))
+        participants: splits
+          .map(p => ({
+            name: p.name || 'Participant',
+            email: p.email,
+            phone: p.phone || '',
+            amount: p.amount
+          }))
       });
 
       if (response.success && response.data) {
@@ -305,80 +306,78 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
               </div>
 
               <div className="space-y-3">
-                {formData.participants.map((participant, index) => (
-                  <div key={participant.id} className="bg-gray-50 rounded-xl p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 bg-primary-plum/20 rounded-full flex items-center justify-center flex-shrink-0">
-                        <Users className="w-5 h-5 text-primary-plum" />
-                      </div>
-                      
-                      <div className="flex-1 space-y-3">
-                        <div className="space-y-3">
-                          <Input
-                            placeholder={index === 0 ? "You" : "Name"}
-                            value={participant.name}
-                            onChange={(e) => updateParticipant(participant.id, 'name', e.target.value)}
-                            className="h-10 text-sm"
-                            disabled={index === 0}
-                          />
-                          <Input
-                            placeholder="Email address"
-                            type="email"
-                            value={participant.email}
-                            onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
-                            className="h-10 text-sm"
-                            // disabled={index === 0}
-                          />
-                          <Input
-                            placeholder="Phone number (optional)"
-                            type="tel"
-                            value={participant.phone}
-                            onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
-                            className="h-10 text-sm"
-                            // disabled={index === 0}
-                          />
+                {formData.participants
+                  .map((participant, index) => ({ participant, index }))
+                  .filter(({ index }) => index !== 0)
+                  .map(({ participant, index }) => (
+                    <div key={participant.id} className="bg-gray-50 rounded-xl p-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-primary-plum/20 rounded-full flex items-center justify-center flex-shrink-0">
+                          <Users className="w-5 h-5 text-primary-plum" />
                         </div>
                         
-                        {formData.splitType === 'equal' && (
-                          <div className="text-sm text-gray-600">
-                            Amount: {currencySymbol}{formatNumberWithCommas(splitAmounts[index]?.amount) || '0.00'}
+                        <div className="flex-1 space-y-3">
+                          <div className="space-y-3">
+                            <Input
+                              placeholder="Name"
+                              value={participant.name}
+                              onChange={(e) => updateParticipant(participant.id, 'name', e.target.value)}
+                              className="h-10 text-sm"
+                            />
+                            <Input
+                              placeholder="Email address"
+                              type="email"
+                              value={participant.email}
+                              onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
+                              className="h-10 text-sm"
+                            />
+                            <Input
+                              placeholder="Phone number (optional)"
+                              type="tel"
+                              value={participant.phone}
+                              onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
+                              className="h-10 text-sm"
+                            />
                           </div>
-                        )}
-                        
-                        {formData.splitType === 'custom' && (
-                          <div>
-                            <Label className="text-xs mb-1.5 block">Custom Amount</Label>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                                {currencySymbol}
-                              </span>
-                              <Input
-                                placeholder="0.00"
-                                type="text"
-                                value={participant.amount > 0 ? formatNumberWithCommas(participant.amount.toString()) : ''}
-                                onChange={(e) => {
-                                  const value = handleNumericInput(e.target.value);
-                                  const numValue = parseFormattedNumber(value);
-                                  updateParticipant(participant.id, 'amount', numValue.toString());
-                                }}
-                                className="pl-8 h-10 text-sm"
-                              />
+                          
+                          {formData.splitType === 'equal' && (
+                            <div className="text-sm text-gray-600">
+                              Amount: {currencySymbol}{formatNumberWithCommas(splitAmounts[index]?.amount) || '0.00'}
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+                          
+                          {formData.splitType === 'custom' && (
+                            <div>
+                              <Label className="text-xs mb-1.5 block">Custom Amount</Label>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                                  {currencySymbol}
+                                </span>
+                                <Input
+                                  placeholder="0.00"
+                                  type="text"
+                                  value={participant.amount > 0 ? formatNumberWithCommas(participant.amount.toString()) : ''}
+                                  onChange={(e) => {
+                                    const value = handleNumericInput(e.target.value);
+                                    const numValue = parseFormattedNumber(value);
+                                    updateParticipant(participant.id, 'amount', numValue.toString());
+                                  }}
+                                  className="pl-8 h-10 text-sm"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
 
-                      {index > 0 && (
                         <button
                           onClick={() => removeParticipant(participant.id)}
                           className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
                         >
                           <X className="w-4 h-4 text-gray-500" />
                         </button>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
 
