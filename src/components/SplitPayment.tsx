@@ -4,9 +4,11 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from './ui/dialog';
-import { ArrowLeft, Share2, Copy, MessageSquare, Mail, Check, Users, Phone, Send, Eye, CreditCard, Building2, Smartphone, CheckCircle, Wallet, Shield, TrendingUp, Clock, DollarSign, Loader2 } from 'lucide-react';
+import { ArrowLeft, Share2, Copy, MessageSquare, Mail, Check, Users, Phone, Send, Eye, CreditCard, Building2, Smartphone, CheckCircle, Wallet, Shield, TrendingUp, Clock, DollarSign, Loader2, AlertCircle } from 'lucide-react';
 import { useCurrency } from '../App';
 import { copyWithFallback } from '../utils/clipboard';
+import { PAYSTACK_CONFIG } from '../config/paystack';
+import { PaymentAPI } from '../services/api';
 
 interface SpleetPaymentProps {
   paymentData: any;
@@ -19,6 +21,8 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
   const [copied, setCopied] = useState(false);
   const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [paymentSuccess, setPaymentSuccess] = useState('');
 
   if (!paymentData) {
     return null;
@@ -102,47 +106,56 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
     </Dialog>
   );
 
-  const PaymentProcessingDialog = () => (
-    <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Processing Payment</DialogTitle>
-          <DialogDescription>
-            Please wait while we process your payment securely.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-6 py-4">
-          <div className="flex flex-col items-center space-y-4">
-            <div className="relative">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-                <DollarSign className="w-8 h-8 text-primary" />
-              </div>
-              {paymentProcessing && (
-                <div className="absolute -top-1 -right-1">
-                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
+  const PaymentProcessingDialog = () => {
+    const currentParticipant = participantsWithPaymentDetails.find(p => p.isCurrentUser);
+    const participantAmount = currentParticipant ? Number(currentParticipant.amount).toFixed(2) : '0.00';
+    
+    return (
+      <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>
+              You will be redirected to Paystack to complete your payment securely.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="relative">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                  <DollarSign className="w-8 h-8 text-primary" />
                 </div>
-              )}
+                {paymentProcessing && (
+                  <div className="absolute -top-1 -right-1">
+                    <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div className="text-center">
+                <p className="font-medium">Redirecting to Paystack...</p>
+                <p className="text-sm text-muted-foreground">Secure payment processing</p>
+              </div>
             </div>
-            <div className="text-center">
-              <p className="font-medium">Securing your payment...</p>
-              <p className="text-sm text-muted-foreground">This may take a few seconds</p>
+            
+            <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
+              <div className="flex justify-between">
+                <span className="text-sm">Amount:</span>
+                <span className="font-medium">{currencySymbol}{participantAmount}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Description:</span>
+                <span className="text-sm text-right max-w-[200px] truncate">{paymentData.description}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm">Payment Provider:</span>
+                <span className="text-sm">Paystack</span>
+              </div>
             </div>
           </div>
-          
-          <div className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm">Amount:</span>
-              <span className="font-medium">{currencySymbol}{(totalAmount / participantsWithPaymentDetails.length).toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm">Payment Method:</span>
-              <span className="text-sm">Card ending in 4532</span>
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   const copyPaymentLink = async (participantId: string) => {
     console.log(paymentData)
@@ -186,24 +199,115 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
     });
   };
 
+  // Load Paystack script if not already loaded
+  const loadPaystackScript = () => {
+    return new Promise((resolve, reject) => {
+      if ((window as any).PaystackPop) {
+        resolve((window as any).PaystackPop);
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://js.paystack.co/v1/inline.js';
+      script.onload = () => resolve((window as any).PaystackPop);
+      script.onerror = () => reject(new Error('Failed to load Paystack script'));
+      document.head.appendChild(script);
+    });
+  };
+
+  // Paystack payment success callback
+  const onPaystackSuccess = async (reference: any) => {
+    setPaymentProcessing(false);
+    setShowPaymentDialog(false);
+    setPaymentError('');
+    
+    try {
+      // Find the participant who just paid
+      const currentParticipant = participantsWithPaymentDetails.find(p => p.isCurrentUser);
+      
+      if (currentParticipant) {
+        // Verify payment with backend
+        const verificationResponse = await PaymentAPI.verifyPayment(
+          paymentData.id,
+          currentParticipant.id,
+          reference.reference
+        );
+        
+        if (verificationResponse.success) {
+          setPaymentSuccess('Payment successful! Your contribution has been recorded.');
+          
+          // Update participant status
+          currentParticipant.isPayer = true;
+          currentParticipant.paymentMethod = 'Card Payment';
+          currentParticipant.paidAt = 'Just now';
+          
+          // Show success message for 3 seconds then refresh
+          setTimeout(() => {
+            setPaymentSuccess('');
+            window.location.reload();
+          }, 3000);
+        } else {
+          setPaymentError('Payment verification failed. Please contact support.');
+        }
+      }
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      setPaymentError('Payment verification failed. Please contact support.');
+    }
+  };
+
+  // Paystack payment close callback
+  const onPaystackClose = () => {
+    setPaymentProcessing(false);
+    setShowPaymentDialog(false);
+    setPaymentError('Payment was cancelled.');
+  };
+
   const handlePayNow = async (participant: any) => {
     setPaymentProcessing(true);
     setShowPaymentDialog(true);
+    setPaymentError('');
+    setPaymentSuccess('');
     
-    // Simulate payment processing
-    setTimeout(() => {
-      // Mark participant as paid
-      participant.isPayer = true;
-      participant.paymentMethod = 'Card ending in 4532';
-      participant.paidAt = 'Just now';
+    try {
+      // Load Paystack script
+      const PaystackPop = await loadPaystackScript();
       
+      // Prepare payment data
+      const amount = Number(participant.amount) * 100; // Convert to kobo
+      const email = participant.email || accountData?.email || 'user@example.com';
+      const reference = `split_payment_${participant.id}_${Date.now()}`;
+      
+      // Initialize Paystack payment
+      const handler = (PaystackPop as any).setup({
+        key: PAYSTACK_CONFIG.publicKey,
+        email: email,
+        amount: amount,
+        currency: paymentData.currency || 'NGN',
+        ref: reference,
+        metadata: {
+          participantId: participant.id,
+          paymentRequestId: paymentData.id,
+          participantName: participant.name,
+          description: paymentData.description
+        },
+        callback: (response: any) => {
+          onPaystackSuccess(response);
+        },
+        onClose: () => {
+          onPaystackClose();
+        }
+      });
+      
+      // Open payment modal
+      handler.openIframe();
+      
+    } catch (error) {
+      console.error('Payment initialization error:', error);
+      setPaymentError('Failed to initialize payment. Please try again.');
       setPaymentProcessing(false);
       setShowPaymentDialog(false);
-      
-      // Force re-render by updating the component state
-      // In a real app, you'd update the parent state or use a state management solution
-      window.location.reload();
-    }, 3000);
+    }
   };
 
   return (
@@ -494,6 +598,26 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
       {copied && (
         <div className="text-center">
           <p className="text-sm text-green-600">Payment link copied to clipboard!</p>
+        </div>
+      )}
+
+      {/* Payment Success Message */}
+      {paymentSuccess && (
+        <div className="text-center p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center justify-center gap-2">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <p className="text-sm text-green-700">{paymentSuccess}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Payment Error Message */}
+      {paymentError && (
+        <div className="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center justify-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <p className="text-sm text-red-700">{paymentError}</p>
+          </div>
         </div>
       )}
 
