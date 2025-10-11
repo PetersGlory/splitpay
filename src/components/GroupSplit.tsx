@@ -327,7 +327,7 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
                             value={participant.email}
                             onChange={(e) => updateParticipant(participant.id, 'email', e.target.value)}
                             className="h-10 text-sm"
-                            disabled={index === 0}
+                            // disabled={index === 0}
                           />
                           <Input
                             placeholder="Phone number (optional)"
@@ -335,13 +335,13 @@ export function GroupSplit({ onNavigate, onPaymentData }: GroupSplitProps) {
                             value={participant.phone}
                             onChange={(e) => updateParticipant(participant.id, 'phone', e.target.value)}
                             className="h-10 text-sm"
-                            disabled={index === 0}
+                            // disabled={index === 0}
                           />
                         </div>
                         
                         {formData.splitType === 'equal' && (
                           <div className="text-sm text-gray-600">
-                            Amount: {currencySymbol}{splitAmounts[index]?.amount.toFixed(2) || '0.00'}
+                            Amount: {currencySymbol}{formatNumberWithCommas(splitAmounts[index]?.amount) || '0.00'}
                           </div>
                         )}
                         
