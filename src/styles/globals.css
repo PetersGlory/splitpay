@@ -2,45 +2,48 @@
 
 :root {
   --font-size: 16px;
-  --background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 25%, #ddd6fe 50%, #bfdbfe 75%, #bae6fd 100%);
-  --foreground: #1e1b4b;
-  --card: rgba(255, 255, 255, 0.9);
-  --card-foreground: #1e1b4b;
-  --popover: rgba(255, 255, 255, 0.95);
-  --popover-foreground: #1e1b4b;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
   --primary: #8B5A8C;
+  --primary-plum: #8B5A8C;
   --primary-light: #a855f7;
-  --primary-dark: #7c3aed;
+  --primary-dark: #6d4570;
   --primary-foreground: #ffffff;
-  --secondary: #f5f3ff;
-  --secondary-foreground: #8B5A8C;
-  --muted: rgba(240, 240, 250, 0.6);
+  --secondary: #f5f5f5;
+  --secondary-foreground: #000000;
+  --muted: #f8f9fa;
   --muted-foreground: #64748b;
-  --accent: #e9d5ff;
-  --accent-foreground: #6b21a8;
+  --accent: #f0f0f0;
+  --accent-foreground: #000000;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: rgba(139, 90, 140, 0.15);
-  --input: transparent;
-  --input-background: rgba(255, 255, 255, 0.7);
+  --border: #e5e7eb;
+  --input: #e5e7eb;
+  --input-background: #ffffff;
   --switch-background: #cbd5e1;
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --ring: #8B5A8C;
-  --chart-1: #a855f7;
-  --chart-2: #3b82f6;
+  --chart-1: #8B5A8C;
+  --chart-2: #0066FF;
   --chart-3: #10b981;
   --chart-4: #f59e0b;
   --chart-5: #ef4444;
-  --radius: 1rem;
-  --sidebar: rgba(255, 255, 255, 0.9);
-  --sidebar-foreground: #1e1b4b;
+  --radius: 0.75rem;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #000000;
   --sidebar-primary: #8B5A8C;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(245, 243, 255, 0.8);
-  --sidebar-accent-foreground: #1e1b4b;
-  --sidebar-border: rgba(139, 90, 140, 0.15);
+  --sidebar-accent: #f5f5f5;
+  --sidebar-accent-foreground: #000000;
+  --sidebar-border: #e5e7eb;
   --sidebar-ring: #8B5A8C;
+  --blue-gradient-start: #a855f7;
+  --blue-gradient-end: #8B5A8C;
 }
 
 .dark {
@@ -128,8 +131,7 @@
 
   body {
     @apply text-foreground;
-    background: linear-gradient(135deg, #fce7f3 0%, #f3e8ff 25%, #ddd6fe 50%, #bfdbfe 75%, #bae6fd 100%);
-    background-attachment: fixed;
+    background: #ffffff;
     min-height: 100vh;
   }
 }
@@ -301,19 +303,57 @@ html {
   animation: shimmer 2s infinite;
 }
 
-/* Glassmorphism effects */
-.glass-card {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 8px 32px 0 rgba(139, 90, 140, 0.1);
+/* Clean card styles */
+.clean-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-.glass-card-strong {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 10px 40px 0 rgba(139, 90, 140, 0.15);
+.clean-card-hover {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  transition: all 0.2s ease;
+}
+
+.clean-card-hover:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Social button backgrounds */
+.bg-facebook {
+  background: #E7F0FF;
+}
+
+.bg-google {
+  background: #E8F5E9;
+}
+
+.bg-apple {
+  background: #F5F5F5;
+}
+
+/* Option card colors */
+.bg-option-purple {
+  background: #F3E8FF;
+}
+
+.bg-option-blue {
+  background: #E7F0FF;
+}
+
+.bg-option-green {
+  background: #E8F5E9;
+}
+
+.bg-option-pink {
+  background: #FCE7F3;
+}
+
+.bg-option-yellow {
+  background: #FEF3C7;
 }
 
 /* Gradient utilities */
@@ -321,8 +361,16 @@ html {
   background: linear-gradient(135deg, #a855f7 0%, #8B5A8C 100%);
 }
 
-.gradient-secondary {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+.gradient-plum {
+  background: linear-gradient(135deg, #a855f7 0%, #8B5A8C 100%);
+}
+
+.gradient-blue-panel {
+  background: linear-gradient(180deg, #a855f7 0%, #8B5A8C 100%);
+}
+
+.gradient-info {
+  background: linear-gradient(135deg, #4d8cff 0%, #0066FF 100%);
 }
 
 .gradient-success {
@@ -331,8 +379,4 @@ html {
 
 .gradient-warning {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-}
-
-.gradient-info {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
 }

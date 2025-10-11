@@ -4,10 +4,10 @@ import { AuthScreen } from './components/AuthScreen';
 import { FullPageLoader } from './components/LoadingSpinner';
 
 import { Home } from './components/Home';
+import { About } from './components/About';
 import { PayForMe } from './components/PayForMe';
 import { GroupSplit } from './components/GroupSplit';
 import { PaymentLink } from './components/PaymentLink';
-import { SpleetPayment } from './components/SplitPayment';
 import { PaymentHistory } from './components/PaymentHistoryFixed';
 import { TransactionDetails } from './components/TransactionDetails';
 import { AccountSetup } from './components/AccountSetup';
@@ -16,6 +16,7 @@ import { BottomNav } from './components/BottomNav';
 import { DesktopNav } from './components/DesktopNav';
 import { Header } from './components/Header';
 import { PaymentRequest } from './services/api';
+import { SpleetPayment } from './components/SplitPayment';
 
 const currencies = {
   NGN: { symbol: '₦', name: 'Nigerian Naira' },
@@ -56,7 +57,12 @@ function AppContent() {
   
   // If trying to access protected route without auth, show auth screen
   if (protectedRoutes.includes(currentScreen) && !isAuthenticated) {
-    return <AuthScreen onAuthSuccess={() => setCurrentScreen('home')} />;
+    return (
+      <AuthScreen 
+        onAuthSuccess={() => setCurrentScreen('home')} 
+        onNavigateHome={() => setCurrentScreen('home')}
+      />
+    );
   }
 
   const handleViewDetails = (payment: PaymentRequest) => {
@@ -68,6 +74,8 @@ function AppContent() {
     switch (currentScreen) {
       case 'home':
         return <Home onNavigate={setCurrentScreen} />;
+      case 'about':
+        return <About onNavigate={setCurrentScreen} />;
       case 'pay-for-me':
         return <PayForMe onNavigate={setCurrentScreen} onPaymentData={setPaymentData} />;
       case 'group-split':
@@ -76,8 +84,6 @@ function AppContent() {
         return <PaymentLink paymentData={paymentData} onNavigate={setCurrentScreen} accountData={user} />;
       case 'split-payment':
         return <SpleetPayment paymentData={paymentData} onNavigate={setCurrentScreen} accountData={user} />;
-      case 'history':
-        return <PaymentHistory onNavigate={setCurrentScreen} onViewDetails={handleViewDetails} />;
       case 'transaction-details':
         return selectedTransaction ? (
           <TransactionDetails payment={selectedTransaction} onNavigate={setCurrentScreen} />

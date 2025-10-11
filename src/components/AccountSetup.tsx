@@ -86,7 +86,7 @@ export function AccountSetup({ onNavigate, onAccountCreated }: AccountSetupProps
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-2xl">Create SpleetPay Account</h1>
+          <h1 className="text-2xl">Create <span className="font-bold">SpleetPay</span> Account</h1>
           <p className="text-muted-foreground">Unlock premium features and extended history</p>
         </div>
       </div>
@@ -188,7 +188,7 @@ export function AccountSetup({ onNavigate, onAccountCreated }: AccountSetupProps
               onCheckedChange={(checked) => setFormData({ ...formData, agreeToTerms: checked as boolean })}
             />
             <Label htmlFor="terms" className="text-sm">
-              I agree to SpleetPay's{' '}
+              I agree to <span className="font-bold">SpleetPay</span>'s{' '}
               <a href="#" className="text-primary hover:underline">Terms of Service</a>
               {' '}and{' '}
               <a href="#" className="text-primary hover:underline">Privacy Policy</a>

@@ -6,11 +6,12 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Switch } from './ui/switch';
 import { Alert } from './ui/alert';
-import { Badge } from './ui/badge';
-import { ArrowLeft, DollarSign, FileText, User, Loader2, AlertCircle, CheckCircle, Sparkles } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { ArrowLeft, Loader2, AlertCircle, CheckCircle, Badge } from 'lucide-react';
 import { useCurrency } from '../App';
 import { useAuth } from '../contexts/AuthContext';
 import { PaymentAPI } from '../services/api';
+import { formatNumberWithCommas, parseFormattedNumber, handleNumericInput } from '../utils/formatNumber';
 
 interface PayForMeProps {
   onNavigate: (screen: string) => void;
@@ -24,10 +25,9 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
   const [formData, setFormData] = useState({
     amount: '',
     description: '',
-    recipientName: '',
     category: 'general',
-    tip: '',
     includeTip: false,
+    tipAmount: '',
     expiresInHours: 24
   });
   
@@ -36,18 +36,22 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
   const [success, setSuccess] = useState('');
 
   const categories = [
-    { id: 'food', label: 'Food & Dining', icon: '🍽️', gradient: 'gradient-warning' },
-    { id: 'travel', label: 'Travel', icon: '✈️', gradient: 'gradient-info' },
-    { id: 'shopping', label: 'Shopping', icon: '🛍️', gradient: 'gradient-primary' },
-    { id: 'entertainment', label: 'Entertainment', icon: '🎬', gradient: 'gradient-secondary' },
-    { id: 'general', label: 'General', icon: '💳', gradient: 'gradient-success' },
+    { id: 'food', label: '🍽️ Food & Dining' },
+    { id: 'travel', label: '✈️ Travel' },
+    { id: 'shopping', label: '🛍️ Shopping' },
+    { id: 'entertainment', label: '🎬 Entertainment' },
+    { id: 'general', label: '💳 General' },
   ];
 
   const validateForm = () => {
     if (!formData.amount) return 'Amount is required';
-    if (parseFloat(formData.amount) <= 0) return 'Amount must be greater than 0';
+    const amount = parseFormattedNumber(formData.amount);
+    if (amount <= 0) return 'Amount must be greater than 0';
     if (!formData.description.trim()) return 'Description is required';
-    if (formData.includeTip && formData.tip && parseFloat(formData.tip) < 0) return 'Tip amount cannot be negative';
+    if (formData.includeTip && formData.tipAmount) {
+      const tipAmount = parseFormattedNumber(formData.tipAmount);
+      if (tipAmount < 0) return 'Tip amount cannot be negative';
+    }
     return null;
   };
 
@@ -64,10 +68,13 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
     setLoading(true);
 
     try {
+      const amount = parseFormattedNumber(formData.amount);
+      const tipAmount = formData.tipAmount ? parseFormattedNumber(formData.tipAmount) : undefined;
+      
       const response = await PaymentAPI.createPaymentRequest({
         type: 'pay_for_me',
         description: formData.description.trim(),
-        amount: parseFloat(formData.amount),
+        amount: amount,
         currency: currency,
         expiresInHours: formData.expiresInHours,
         allowTips: formData.includeTip
@@ -91,194 +98,214 @@ export function PayForMe({ onNavigate, onPaymentData }: PayForMeProps) {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="glass-card-strong rounded-3xl p-6 border-white/60 shadow-lg">
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="sm"
+    <div className="min-h-screen bg-white lg:grid lg:grid-cols-2">
+      {/* Desktop Left Panel */}
+      <div className="hidden lg:flex lg:flex-col lg:justify-between gradient-blue-panel text-white p-12">
+        <div>
+          <button
             onClick={() => onNavigate('home')}
-            className="mr-3 -ml-2 lg:hidden w-9 h-9 rounded-xl"
+            className="mb-12 p-2 hover:bg-white/10 rounded-lg transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-1">
-              <h1 className="text-xl lg:text-2xl">Pay for Me</h1>
-              <Badge variant="secondary" className="text-xs">Popular</Badge>
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          
+          <h1 className="text-4xl mb-4">Pay for Me</h1>
+          <p className="text-white/90 text-lg mb-12">
+            Create a payment link that someone else can use to pay on your behalf
+          </p>
+
+          <div className="space-y-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+              <h3 className="text-xl mb-2">How it works</h3>
+              <ul className="space-y-3 text-white/90">
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">1</div>
+                  <span>Enter the amount and what it's for</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">2</div>
+                  <span>Get a unique payment link</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">3</div>
+                  <span>Share via WhatsApp, SMS or email</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5">4</div>
+                  <span>Receive payment directly to your wallet</span>
+                </li>
+              </ul>
             </div>
-            <p className="text-sm text-muted-foreground">Let someone else pay for your purchase</p>
           </div>
+        </div>
+
+        <div className="text-white/70 text-sm">
+          <p>Secure payments powered by <span className="font-bold">SpleetPay</span></p>
         </div>
       </div>
 
-      <div className="lg:grid lg:grid-cols-2 lg:gap-6 space-y-4 lg:space-y-0">
+      {/* Mobile Header */}
+      <div className="lg:hidden px-4 py-6 border-b border-gray-200">
+        <button
+          onClick={() => onNavigate('home')}
+          className="mb-6 p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+        
+        <h1 className="text-3xl mb-2">Pay for Me</h1>
+        <p className="text-gray-600">
+          Create a payment link for someone to pay on your behalf
+        </p>
+      </div>
 
-        {/* Left Column */}
-        <div className="space-y-4">
-          {/* Amount Input */}
-          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="amount">Payment Amount</Label>
-                <Badge variant="outline" className="text-xs">Required</Badge>
-              </div>
+      {/* Form Content */}
+      <div className="p-4 lg:p-12 lg:overflow-y-auto">
+        <div className="max-w-xl">
+          {/* Alerts */}
+          {error && (
+            <Alert className="mb-6 bg-red-50 border-red-200 text-red-800">
+              <AlertCircle className="w-4 h-4" />
+              <span className="ml-2">{error}</span>
+            </Alert>
+          )}
+          
+          {success && (
+            <Alert className="mb-6 bg-green-50 border-green-200 text-green-800">
+              <CheckCircle className="w-4 h-4" />
+              <span className="ml-2">{success}</span>
+            </Alert>
+          )}
+
+          <div className="space-y-6">
+            {/* Amount */}
+            <div>
+              <Label htmlFor="amount" className="text-[15px] mb-2 block">Amount</Label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground text-lg">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
                   {currencySymbol}
                 </span>
                 <Input
                   id="amount"
-                  type="number"
+                  type="text"
                   placeholder="0.00"
                   value={formData.amount}
-                  onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                  className="pl-12 text-lg h-14 glass-card border-white/40 text-center"
-                />
-              </div>
-              {formData.amount && parseFloat(formData.amount) > 0 && (
-                <p className="text-xs text-muted-foreground text-center">
-                  Total: {currencySymbol}{parseFloat(formData.amount).toFixed(2)}
-                </p>
-              )}
-            </div>
-          </Card>
-
-          {/* Purchase Details */}
-          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
-            <div className="space-y-3">
-              <Label htmlFor="description">What's this for?</Label>
-              <div className="relative">
-                <FileText className="absolute left-4 top-4 w-4 h-4 text-muted-foreground" />
-                <Textarea
-                  id="description"
-                  placeholder="e.g., Lunch at Pizza Palace, Movie tickets..."
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="pl-11 min-h-[100px] glass-card border-white/40"
+                  onChange={(e) => setFormData({ ...formData, amount: handleNumericInput(e.target.value) })}
+                  className="pl-10 h-12 text-base border-gray-300 rounded-xl"
                 />
               </div>
             </div>
-          </Card>
 
-          {/* Who's Paying */}
-          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
-            <div className="space-y-3">
-              <Label htmlFor="recipient">Who's paying?</Label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="recipient"
-                  placeholder="Friend's name (optional)"
-                  value={formData.recipientName}
-                  onChange={(e) => setFormData({ ...formData, recipientName: e.target.value })}
-                  className="pl-11 glass-card border-white/40"
-                />
-              </div>
+            {/* Description */}
+            <div>
+              <Label htmlFor="description" className="text-[15px] mb-2 block">
+                What is this payment for?
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="e.g., Lunch at restaurant, Flight ticket, etc."
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                className="min-h-[100px] text-base border-gray-300 rounded-xl resize-none"
+                maxLength={200}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                {formData.description.length}/200 characters
+              </p>
             </div>
-          </Card>
-        </div>
 
-        {/* Right Column */}
-        <div className="space-y-4">
-          {/* Category Selection */}
-          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
-            <div className="space-y-3">
-              <Label>Payment Category</Label>
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
-                {categories.map((category) => {
-                  const isSelected = formData.category === category.id;
-                  return (
-                    <button
-                      key={category.id}
-                      onClick={() => setFormData({ ...formData, category: category.id })}
-                      className={`p-3 rounded-xl transition-all duration-300 ${
-                        isSelected
-                          ? 'glass-card-strong border-primary/50 shadow-md scale-105'
-                          : 'glass-card border-white/40 hover:border-primary/30 hover:scale-102'
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2">
-                        <div className={`w-8 h-8 rounded-lg ${category.gradient} flex items-center justify-center`}>
-                          <span className="text-base">{category.icon}</span>
-                        </div>
-                        <span className="text-sm flex-1 text-left">{category.label}</span>
-                        {isSelected && <CheckCircle className="w-4 h-4 text-primary" />}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
+            {/* Category */}
+            <div>
+              <Label htmlFor="category" className="text-[15px] mb-2 block">Category (optional)</Label>
+              <Select value={formData.category} onValueChange={(value) => setFormData({ ...formData, category: value })}>
+                <SelectTrigger id="category" className="h-12 text-base border-gray-300 rounded-xl">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          </Card>
 
-          {/* Tip Section */}
-          <Card className="p-5 glass-card-strong border-white/60 shadow-lg">
-            <div className="space-y-3">
+            {/* Allow Tips */}
+            <div className="p-4 bg-gray-50 rounded-xl space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="includeTip">Enable Tip</Label>
-                  <Sparkles className="w-4 h-4 text-primary" />
+                <div>
+                  <Label htmlFor="tip-switch" className="text-[15px] mb-1 block">Allow tips</Label>
+                  <p className="text-xs text-gray-600">Let payer add optional tip</p>
                 </div>
                 <Switch
-                  id="includeTip"
+                  id="tip-switch"
                   checked={formData.includeTip}
-                  onCheckedChange={(checked) => setFormData({ ...formData, includeTip: checked, tip: checked ? formData.tip : '' })}
+                  onCheckedChange={(checked) => setFormData({ ...formData, includeTip: checked, tipAmount: checked ? formData.tipAmount : '' })}
                 />
               </div>
+              
               {formData.includeTip && (
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground">
-                    {currencySymbol}
-                  </span>
-                  <Input
-                    id="tip"
-                    type="number"
-                    placeholder="Suggested tip amount"
-                    value={formData.tip}
-                    onChange={(e) => setFormData({ ...formData, tip: e.target.value })}
-                    className="pl-12 glass-card border-white/40"
-                  />
+                <div>
+                  <Label htmlFor="tipAmount" className="text-[15px] mb-2 block">Suggested tip amount (optional)</Label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                      {currencySymbol}
+                    </span>
+                    <Input
+                      id="tipAmount"
+                      type="text"
+                      placeholder="0.00"
+                      value={formData.tipAmount}
+                      onChange={(e) => setFormData({ ...formData, tipAmount: handleNumericInput(e.target.value) })}
+                      className="pl-10 h-12 text-base border-gray-300 rounded-xl"
+                    />
+                  </div>
                 </div>
               )}
             </div>
-          </Card>
 
-          {/* Error and Success Messages */}
-          {error && (
-            <Alert className="border-red-200 bg-red-50/80 backdrop-blur">
-              <AlertCircle className="h-4 w-4 text-red-500" />
-              <p className="text-red-700 text-sm">{error}</p>
-            </Alert>
-          )}
+            {/* Expiry */}
+            <div>
+              <Label className="text-[15px] mb-3 block">Link expires in</Label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { hours: 24, label: '24 hours' },
+                  { hours: 72, label: '3 days' },
+                  { hours: 168, label: '7 days' }
+                ].map((option) => (
+                  <button
+                    key={option.hours}
+                    onClick={() => setFormData({ ...formData, expiresInHours: option.hours })}
+                    className={`p-3 rounded-xl text-sm transition-all ${
+                      formData.expiresInHours === option.hours
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-100 hover:bg-gray-200'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-          {success && (
-            <Alert className="border-green-200 bg-green-50/80 backdrop-blur">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <p className="text-green-700 text-sm">{success}</p>
-            </Alert>
-          )}
-
-          {/* Create Payment Link Button */}
-          <div className="lg:sticky lg:top-6">
-            <Button
-              onClick={handleSubmit}
-              disabled={loading || !formData.amount || !formData.description}
-              className="w-full h-12 lg:h-14 gradient-primary text-white shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Create Payment Link
-                </>
-              )}
-            </Button>
+            {/* Submit Button */}
+            <div className="pt-4">
+              <Button
+                onClick={handleSubmit}
+                disabled={loading}
+                className="w-full h-12 text-base bg-primary hover:bg-primary-dark text-white rounded-xl"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Creating Link...
+                  </>
+                ) : (
+                  'Create Payment Link'
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>
