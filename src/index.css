@@ -3939,3 +3939,11 @@ html {
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
 }
+
+
+input,
+textarea,
+select {
+  font-size: 16px !important; /* Prevents zoom on iOS devices */
+  touch-action: manipulation; /* Prevents double-tap zoom */
+}
