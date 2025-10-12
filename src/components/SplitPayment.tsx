@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { ArrowLeft, Share2, Copy, MessageSquare, Mail, Check, Users, Phone, Send, Eye, CreditCard, Building2, Smartphone, CheckCircle, Wallet, Shield, TrendingUp, Clock, DollarSign, Loader2 } from 'lucide-react';
 import { useCurrency } from '../App';
 import { copyWithFallback } from '../utils/clipboard';
+import { formatNumberWithCommas } from '../utils/formatNumber';
 
 interface SpleetPaymentProps {
   paymentData: any;
@@ -227,17 +228,17 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
           <div className="space-y-3">
             <div className="flex justify-between">
               <span>Total Amount:</span>
-              <span className="font-semibold">{currencySymbol}{totalAmount.toFixed(2)}</span>
+              <span className="font-semibold">{currencySymbol}{formatNumberWithCommas(totalAmount)}</span>
             </div>
             
             <div className="flex justify-between">
               <span>Collected:</span>
-              <span className="text-green-600">{currencySymbol}{paidAmount.toFixed(2)}</span>
+              <span className="text-green-600">{currencySymbol}{formatNumberWithCommas(paidAmount)}</span>
             </div>
             
             <div className="flex justify-between">
               <span>Remaining:</span>
-              <span className="text-red-600">{currencySymbol}{(totalAmount - paidAmount).toFixed(2)}</span>
+              <span className="text-red-600">{currencySymbol}{formatNumberWithCommas(totalAmount - paidAmount)}</span>
             </div>
             
             <Progress value={progressPercentage} className="w-full" />
@@ -277,7 +278,7 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
                       <p className="font-medium">
                         {participant.name || `Person ${index + 1}`}
                       </p>
-                      <p className="text-sm text-muted-foreground">{currencySymbol}{Number(participant.amount).toFixed(2)}</p>
+                      <p className="text-sm text-muted-foreground">{currencySymbol}{formatNumberWithCommas(Number(participant.amount))}</p>
                       
                       {participant.isPayer && participant.paymentMethod && (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
@@ -291,8 +292,12 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
                       {!participant.isPayer && (participant.email || participant.phone) && (
                         <div className="text-xs text-muted-foreground mt-1">
                           {participant.email && <span>📧 {participant.email}</span>}
-                          {participant.email && participant.phone && <span> • </span>}
-                          {participant.phone && <span>📱 {participant.phone}</span>}
+                          {participant.name !== "You" && (
+                            <>
+                              {participant.email && participant.phone && <span> • </span>}
+                              {participant.phone && <span>📱 {participant.phone}</span>}
+                            </>
+                          )}
                         </div>
                       )}
                     </div>
@@ -451,7 +456,7 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
                     <p className="font-medium">
                       {participant.isCurrentUser ? 'You' : participant.name || `Person ${index + 1}`}
                     </p>
-                    <p className="text-sm text-muted-foreground">{currencySymbol}{Number(participant.amount).toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">{currencySymbol}{formatNumberWithCommas(Number(participant.amount))}</p>
                   </div>
                   <div className="flex space-x-2">
                     <Button
