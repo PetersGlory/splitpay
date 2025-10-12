@@ -380,3 +380,15 @@ html {
 .gradient-warning {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
 }
+
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+.flex-nowrap {
+  flex-wrap: nowrap;
+}
+.flex-wrap-reverse {
+  flex-wrap: wrap-reverse;
+}
+

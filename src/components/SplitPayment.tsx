@@ -289,7 +289,7 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
                         </div>
                       )}
                       
-                      {!participant.isPayer && (participant.email || participant.phone) && (
+                      {participant.name !== "You" && (
                         <div className="text-xs text-muted-foreground mt-1">
                           {participant.email && <span>📧 {participant.email}</span>}
                           {participant.name !== "You" && (
@@ -332,7 +332,7 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
                         Pay Now
                       </Button>
                     ) : (
-                      <>
+                      <div className="w-full flex-wrap">
                         <Button
                           variant="outline"
                           size="sm"
@@ -376,7 +376,7 @@ export function SpleetPayment({ paymentData, onNavigate, accountData }: SpleetPa
                           <MessageSquare className="w-3 h-3 mr-1" />
                           WhatsApp
                         </Button>
-                      </>
+                      </div>
                     )}
                   </div>
                 )}
