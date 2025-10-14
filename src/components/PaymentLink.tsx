@@ -41,21 +41,21 @@ export function PaymentLink({ paymentData, onNavigate, accountData }: PaymentLin
     }, 2000);
 
     // Simulate payment completion after some time
-    const paymentTimer = setTimeout(() => {
-      const shouldComplete = Math.random() > 0.7; // 30% chance of completion for demo
-      if (shouldComplete) {
-        setPaymentStatus('completed');
-        setLinkActivity(prev => ({
-          ...prev,
-          paymentMethod: 'Card ending in 4532',
-          paidAt: 'Just now'
-        }));
-      }
-    }, 8000);
+    // const paymentTimer = setTimeout(() => {
+    //   const shouldComplete = Math.random() > 0.7; // 30% chance of completion for demo
+    //   if (shouldComplete) {
+    //     setPaymentStatus('completed');
+    //     setLinkActivity(prev => ({
+    //       ...prev,
+    //       paymentMethod: 'Card ending in 4532',
+    //       paidAt: 'Just now'
+    //     }));
+    //   }
+    // }, 8000);
 
     return () => {
       clearTimeout(timer);
-      clearTimeout(paymentTimer);
+      // clearTimeout(paymentTimer);
     };
   }, []);
 
