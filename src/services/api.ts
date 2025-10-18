@@ -1,5 +1,5 @@
 // API Configuration and Service Layer for SpleetPay
-const API_BASE_URL = "https://backendapi.spleetpay.com//api";
+const API_BASE_URL = "https://backendapi.spleetpay.com/api";
 
 // Types
 export interface User {
